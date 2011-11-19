@@ -194,7 +194,7 @@ void CCamera::LoadFromFile(void)
 				for (int i=0;i<3;++i)
 					position[i]=atof(v[i].c_str());
 			}
-			printf("Loaded camera position: %f %f %f\n",position.x, position.y, position.z);
+			WriteLogF("Loaded camera position: %f %f %f\n",position.x, position.y, position.z);
 		}
 	}
 

@@ -28,7 +28,7 @@ void ToggleCullFace()
 // в том числе и принудительно, по командам glutPostRedisplay
 void Display (void)
 {
-	// отчищаем буфер цвета и буфер глубины
+	// очищаем буфер цвета и буфер глубины
 	glClearColor(0.3,0.3,0.3,1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
@@ -175,7 +175,12 @@ void main (int argc,char **argv)
 	setlocale(LC_CTYPE, "RUS");
 
 	ProgPath = GetPathFromFilename(argv[0]);
-	ConfigFile = ProgPath+"config.cfg";
+	ConfigFile = ProgPath + "config.cfg";
+	LogFile = ProgPath + "Logs\\" + getNowToString() + ".log";
+	if (!FileExists((ProgPath + "Logs").c_str()))
+	{
+		CreateDirectory((ProgPath + "Logs").c_str(), NULL);
+	}
 
 	// инициализация библиотеки GLUT
 	glutInit(&argc,argv);
@@ -201,25 +206,39 @@ void main (int argc,char **argv)
 
 	// вывод строк описывающих OpenGL
 	// вывод производителя
-	printf("%s\n",glGetString(GL_VENDOR));
-	printf("%s\n",glGetString(GL_RENDER));
-	printf("%s\n",glGetString(GL_VERSION));
+	WriteLogF("Vendor: %s", glGetString(GL_VENDOR));
+	WriteLogF("Render: %s", glGetString(GL_RENDER));
+	WriteLogF("Version: %s", glGetString(GL_VERSION));
 	// вывод версии шейдерного языка
-	printf("%s\n",glGetString(GL_SHADING_LANGUAGE_VERSION));
+	WriteLogF("GLSL Version: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 	// вывод всех доступных расширений
-	char *ext=(char*)glGetString(GL_EXTENSIONS);
-	int i=0;
-	while (ext[i]!=0)
-		printf("%c",ext[i++]==' '?'\n':ext[i-1]);
+	char *_ext=(char*)glGetString(GL_EXTENSIONS);
+	char *_extForPrint = new char[strlen(_ext) * 2];
+	int i = 0, j = 0;
+	do 
+	{
+		if (_ext[i] ==' ')
+		{
+			_extForPrint[j] = '\n';
+			j++;
+			_extForPrint[j] = '\t';
+		}
+		else
+			_extForPrint[j] = _ext[i];
+		j++;
+	} while (_ext[i++] != NULL);
+
+	WriteLogF("%s\n\t%s", "Supported extensions:", _extForPrint);
+	delete[] _extForPrint;
 
 	// проверка потдержки VBO
 	if (GLEE_ARB_vertex_buffer_object)
 	{
-		printf("\n\n%s\n","supporting VBO ......OK");
+		WriteLog("supporting VBO ......OK");
 	}
 	else
 	{
-		printf("\n\n%s\n","supporting VBO ......fail");
+		WriteLog("supporting VBO ......fail");
 		printf("Press any key...");
 		_getch();
 		exit(1);
@@ -228,11 +247,11 @@ void main (int argc,char **argv)
 	// Проверка поддержки шейдеров
 	if (GLEE_ARB_shader_objects && GLEE_ARB_fragment_shader && GLEE_ARB_vertex_shader)
 	{
-		printf("%s\n","supporting shaders ......OK");
+		WriteLog("supporting shaders ......OK");
 	}
 	else
 	{
-		printf("%s\n","supporting shaders ......fail");
+		WriteLog("supporting shaders ......fail");
 		printf("Press any key...");
 		_getch();
 		exit(1);

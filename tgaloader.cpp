@@ -6,7 +6,8 @@
 /           LoadCompressedTGA(Texture * texture, char * filename, FILE * fTGA)  *  
 /           LoadUncompressedTGA(Texture * texture, char * filename, FILE * fTGA)*     
 /*******************************************************************************/   
-#include "tga.h"   
+#include "tga.h"
+#include "macro.h"
    
    
 /********************************************************************************  
@@ -23,13 +24,13 @@ bool LoadTGA(Texture * texture, char * filename)                // Load a TGA fi
    
     if(fTGA == NULL)                                            // If it didn't open....   
     {   
-		printf("ERROR: Could not open texture file");			// Display an error message   
+		WriteLogF("ERROR: Could not open texture file");			// Display an error message   
         return false;                                                       // Exit function   
     }   
    
     if(fread(&tgaheader, sizeof(TGAHeader), 1, fTGA) == 0)                  // Attempt to read 12 byte header from file   
     {  
-		printf("ERROR: Could not read file header");				     // If it fails, display an error message    
+		WriteLogF("ERROR: Could not read file header");				     // If it fails, display an error message    
         if(fTGA != NULL)                                                    // Check to seeiffile is still open   
         {   
             fclose(fTGA);                                                   // If it is, close it   
@@ -47,7 +48,7 @@ bool LoadTGA(Texture * texture, char * filename)                // Load a TGA fi
     }   
     else                                                                    // If header matches neither type   
     {   
-		printf("Invalid Image: TGA file be type 2 or type 10 ");			// Display an error   
+		WriteLogF("Invalid Image: TGA file be type 2 or type 10 ");			// Display an error   
         fclose(fTGA);   
         return false;                                                               // Exit function   
     }   
@@ -58,7 +59,7 @@ bool LoadUncompressedTGA(Texture * texture, char * filename, FILE * fTGA)   // L
 {                                                                           // TGA Loading code nehe.gamedev.net)   
     if(fread(tga.header, sizeof(tga.header), 1, fTGA) == 0)                 // Read TGA header   
     {                                          
-		printf("ERROR: Could not read info header");						// Display error   
+		WriteLogF("ERROR: Could not read info header");						// Display error   
         if(fTGA != NULL)                                                    // if file is still open   
         {   
             fclose(fTGA);                                                   // Close it   
@@ -75,7 +76,7 @@ bool LoadUncompressedTGA(Texture * texture, char * filename, FILE * fTGA)   // L
    
     if((texture->width == 0) || (texture->height == 0) || ((texture->bpp != 24) && (texture->bpp !=32)))  // Make sure all information is valid   
     {   
-		printf("ERROR: Invalid texture information");
+		WriteLogF("ERROR: Invalid texture information");
         if(fTGA != NULL)                                                    // Check if file is still open   
         {   
             fclose(fTGA);                                                   // If so, close it   
@@ -94,14 +95,14 @@ bool LoadUncompressedTGA(Texture * texture, char * filename, FILE * fTGA)   // L
    
     if(texture->imageData == NULL)                                           // If no space was allocated   
     {   
-		printf("ERROR: Could not allocate memory for image");
+		WriteLogF("ERROR: Could not allocate memory for image");
         fclose(fTGA);                                                       // Close the file   
         return false;                                                       // Return failed   
     }   
    
     if(fread(texture->imageData, 1, tga.imageSize, fTGA) != tga.imageSize)   // Attempt to read image data   
     {   
-		printf("ERROR: Could not read image data");
+		WriteLogF("ERROR: Could not read image data");
         if(texture->imageData != NULL)                                       // If imagedata has data in it   
         {   
             free(texture->imageData);                                        // Delete data from memory   
@@ -125,7 +126,7 @@ bool LoadCompressedTGA(Texture * texture, char * filename, FILE * fTGA)     // L
 {    
     if(fread(tga.header, sizeof(tga.header), 1, fTGA) == 0)                 // Attempt to read header   
     {   
-		printf("ERROR: Could not read info header");
+		WriteLogF("ERROR: Could not read info header");
         if(fTGA != NULL)                                                    // If file is open   
         {   
             fclose(fTGA);                                                   // Close it   
@@ -142,7 +143,7 @@ bool LoadCompressedTGA(Texture * texture, char * filename, FILE * fTGA)     // L
    
     if((texture->width == 0) || (texture->height == 0) || ((texture->bpp != 24) && (texture->bpp !=32)))  //Make sure all texture info is ok   
     {   
-		printf("ERROR: Invalid texture information"); 
+		WriteLogF("ERROR: Invalid texture information"); 
         if(fTGA != NULL)                                                    // Check if file is open   
         {   
             fclose(fTGA);                                                   // Ifit is, close it   
@@ -161,7 +162,7 @@ bool LoadCompressedTGA(Texture * texture, char * filename, FILE * fTGA)     // L
    
     if(texture->imageData == NULL)                                           // If it wasnt allocated correctly..   
     {   
-        printf("ERROR: Could not allocate memory for image"); 
+        WriteLogF("ERROR: Could not allocate memory for image"); 
         fclose(fTGA);                                                       // Close file   
         return false;                                                       // Return failed   
     }   
@@ -177,7 +178,7 @@ bool LoadCompressedTGA(Texture * texture, char * filename, FILE * fTGA)     // L
    
         if(fread(&chunkheader, sizeof(GLubyte), 1, fTGA) == 0)              // Read in the 1 byte header   
         {   
-            printf("ERROR: Could not read RLE header");   
+            WriteLogF("ERROR: Could not read RLE header");   
             if(fTGA != NULL)                                                // If file is open   
             {   
                 fclose(fTGA);                                               // Close file   
@@ -196,7 +197,7 @@ bool LoadCompressedTGA(Texture * texture, char * filename, FILE * fTGA)     // L
             {   
                 if(fread(colorbuffer, 1, tga.bytesPerPixel, fTGA) != tga.bytesPerPixel) // Try to read 1 pixel   
                 {   
-                    printf("ERROR: Could not read image data");
+                    WriteLogF("ERROR: Could not read image data");
    
                     if(fTGA != NULL)                                                    // See if file is open   
                     {   
@@ -230,7 +231,7 @@ bool LoadCompressedTGA(Texture * texture, char * filename, FILE * fTGA)     // L
    
                 if(currentpixel > pixelcount)                                            // Make sure we havent read too many pixels   
                 {   
-                    printf("ERROR: Too many pixels read");       
+                    WriteLogF("ERROR: Too many pixels read");       
    
                     if(fTGA != NULL)                                                    // If there is a file open   
                     {   
@@ -256,7 +257,7 @@ bool LoadCompressedTGA(Texture * texture, char * filename, FILE * fTGA)     // L
             chunkheader -= 127;                                                         // Subteact 127 to get rid of the ID bit   
             if(fread(colorbuffer, 1, tga.bytesPerPixel, fTGA) != tga.bytesPerPixel)     // Attempt to read following color values   
             {      
-                printf("ERROR: Could not read from file"); 
+                WriteLogF("ERROR: Could not read from file"); 
    
                 if(fTGA != NULL)                                                        // If thereis a file open   
                 {   
@@ -292,7 +293,7 @@ bool LoadCompressedTGA(Texture * texture, char * filename, FILE * fTGA)     // L
    
                 if(currentpixel > pixelcount)                                            // Make sure we havent written too many pixels   
                 {   
-                    printf("ERROR: Too many pixels read");  
+                    WriteLogF("ERROR: Too many pixels read");  
    
                     if(fTGA != NULL)                                                    // If there is a file open   
                     {   

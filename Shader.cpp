@@ -13,14 +13,14 @@ bool Shader::Load(unsigned int shader, string FileName)
 	int error=0;
 	// Файл шейдера
 	ifstream ShaderF(FileName.c_str(), ios::in|ios::binary);
-	printf("  Loading shader \"%s\"...\n", FileName.c_str());
+	WriteLogF("  Loading shader \"%s\"...", FileName.c_str());
 	
 	// Файл существует
 	if (ShaderF!=NULL)
 	{
 		v.clear();
 		// Загрузка строк из файла
-		printf("    Loading...\n");
+		WriteLogF("    Loading...");
 		while(ShaderF.good())
 		{
 			buf = new char[1024];
@@ -34,7 +34,7 @@ bool Shader::Load(unsigned int shader, string FileName)
 		for (unsigned int i=0;i<v.size();i++)
 			str[i]=v[i];
 		// Компиляция шейдера
-		printf("    Compiling...\n");
+		WriteLogF("    Compiling...");
 		glShaderSource(shader, v.size(), (const char**)str, 0);
 		glCompileShader(shader);
 		glGetShaderiv(shader, GL_COMPILE_STATUS, &error);
@@ -47,17 +47,17 @@ bool Shader::Load(unsigned int shader, string FileName)
 			GLsizei count;
 			char errtext[1024];
 			glGetShaderInfoLog(shader, 1024, &count, errtext);
-			printf("    Compilation failed! Errors:\n%s\n", errtext);
+			WriteLogF("    Compilation failed! Errors:\n%s", errtext);
 		}
 		else
 		{
-			printf("    Shader successfully loaded\n");
+			WriteLogF("    Shader successfully loaded");
 			ShaderF.close();
 			return true;
 		}
 	}
 	else
-		printf("    Error: file not exists\n");
+		WriteLogF("    Error: file not exists");
 	ShaderF.close();
 	return false;
 }
@@ -72,7 +72,7 @@ void Shader::LoadShader(string Name)
 	FShader=glCreateShader(GL_FRAGMENT_SHADER);
 	PShader=glCreateProgram();
 	
-	printf("\nLoading shader program \"%s\"...\n", Name.c_str());
+	WriteLogF("\nLoading shader program \"%s\"...", Name.c_str());
 	Loaded=false;
 	// Загрузка ВШ и ФШ
 	if (Load(VShader, ProgPath+"Shaders\\"+Name+".vsh") && Load(FShader,  ProgPath+"Shaders\\"+Name+".fsh"))
@@ -88,11 +88,11 @@ void Shader::LoadShader(string Name)
 			GLsizei count;
 			char errtext[1024];
 			glGetProgramInfoLog(PShader, 1024, &count, errtext);
-			printf("  Link failed! Errors:\n%s\n", errtext);
+			WriteLogF("  Link failed! Errors:\n%s", errtext);
 		}
 		else
 		{
-			printf("  Shader program successfully loaded\n");
+			WriteLogF("  Shader program successfully loaded");
 			Loaded=true;
 		}
 	}

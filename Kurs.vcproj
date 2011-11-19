@@ -216,6 +216,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\macro.h"
+				>
+			</File>
+			<File
 				RelativePath=".\main.h"
 				>
 			</File>

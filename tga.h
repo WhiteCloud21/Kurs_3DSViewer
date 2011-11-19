@@ -38,5 +38,7 @@ GLubyte uTGAcompare[12] = {0,0,2, 0,0,0,0,0,0,0,0,0};	// Uncompressed TGA Header
 GLubyte cTGAcompare[12] = {0,0,10,0,0,0,0,0,0,0,0,0};	// Compressed TGA Header 
 bool LoadUncompressedTGA(Texture *, char *, FILE *);	// Load an Uncompressed file 
 bool LoadCompressedTGA(Texture *, char *, FILE *);		// Load a Compressed file 
+
+extern void WriteLog(char *text);
  
 #endif 

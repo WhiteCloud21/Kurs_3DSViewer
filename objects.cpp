@@ -201,7 +201,7 @@ void LoadObjects()
 		}
 	}
 	ConfigF.close();
-	printf("Total objects loaded: %d\n",objects.size());
+	WriteLogF("Total objects loaded: %d\n", objects.size());
 
 	UseDestructors=true;
 

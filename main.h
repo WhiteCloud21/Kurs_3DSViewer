@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include "macro.h"
 
 using namespace std;
 
@@ -26,12 +27,16 @@ extern bool CullFaceFlag;
 
 extern string ProgPath;
 extern string ConfigFile;
+extern string LogFile;
 
 // Функции
 extern void split(const string& str, const string& delim, vector<string>& parts);
 extern string remove_spaces(const string& source);
 extern string StrToLower(string s);
 extern inline string StrReplace(string text, string s, string d);
+extern void WriteLog(char *text);
+extern bool FileExists (const char *fname);
+extern string getNowToString();
 
 extern void ChangeTextureFilter();
 extern void LoadObjects();

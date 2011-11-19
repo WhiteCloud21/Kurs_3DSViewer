@@ -27,7 +27,7 @@ void C3DSObject::ClearTexture()
 void C3DSObject::SetTexture(string FileName)
 {
 	ClearTexture();
-	printf("\nLoading texture \"%s\"...\n", FileName.c_str());
+	WriteLogF("Loading texture \"%s\"...", FileName.c_str());
 	glActiveTexture(GL_TEXTURE0);
 	glGenTextures(1,(GLuint *)&texture.texID);
 	glBindTexture(GL_TEXTURE_2D,texture.texID);
@@ -44,7 +44,7 @@ void C3DSObject::SetTexture(string FileName)
 		glPixelStorei(GL_UNPACK_ALIGNMENT,1);
 		glTexImage2D (GL_TEXTURE_2D,0,GL_RGB,texture.width,texture.height,
 			0,texture.type,GL_UNSIGNED_BYTE,texture.imageData);
-		printf("  Loading succesfull\n");
+		WriteLogF("  Loading succesfull\n");
 	}
 	else
 		texture.imageData = NULL;
@@ -82,7 +82,7 @@ bool C3DSObject::Load(const char *FileName, Shader* shader)
 {
 	bool MeshFirst=false, Flag=true;
 
-	printf("\nLoading object \"%s\"...\n", FileName);
+	WriteLogF("Loading object \"%s\"...", FileName);
 	
 	// Файл модели
 	ifstream ModelF(FileName, ios::in|ios::binary);
@@ -107,7 +107,7 @@ bool C3DSObject::Load(const char *FileName, Shader* shader)
 			// Читаем заголовок чанка
 			ModelF.read((char *)&chunk_id,2);
 			ModelF.read((char *)&chunk_len,4);
-			printf("  Chunk ID = 0x%hX Length = %u",chunk_id,chunk_len);
+			WriteLogF("  Chunk ID = 0x%hX Length = %u",chunk_id,chunk_len);
 			switch (chunk_id)
 			{
 			// Чанки, которые НЕ пропускаем
@@ -136,7 +136,7 @@ bool C3DSObject::Load(const char *FileName, Shader* shader)
 					VertexList[3*i+1]=color.g;
 					VertexList[3*i+2]=color.b;
 				}
-				printf(" VertexCount = %hu",VertexCount);
+				WriteLogF(" VertexCount = %hu",VertexCount);
 				break;
 			case 0x4120: //FACE_ARRAY
 				// Читаем массив индексов
@@ -151,14 +151,14 @@ bool C3DSObject::Load(const char *FileName, Shader* shader)
 					ModelF.ignore(sizeof(unsigned short));
 				}
 				IndexCount*=3;
-				printf(" IndexCount = %hu",IndexCount);
+				WriteLogF(" IndexCount = %hu",IndexCount);
 				break;
 			case 0x4140: //TEX_VERTS
 				// Читаем массив текст. координат
 				ModelF.read((char *)&TexVertCount,2);
 				TexVertList = new GLfloat[TexVertCount*2];
 				ModelF.read((char *)TexVertList,TexVertCount*sizeof(GLfloat)*2);
-				printf(" TextureVertexCount = %hu",TexVertCount);
+				WriteLogF(" TextureVertexCount = %hu",TexVertCount);
 				break;
 			case 0x4160: //MESH_MATRIX
 				// Считывание матрицы
@@ -167,10 +167,9 @@ bool C3DSObject::Load(const char *FileName, Shader* shader)
 			default:
 				// Пропускаем чанк
 				ModelF.ignore(chunk_len-6);
-				printf("   IGNORING");
+				WriteLogF("   IGNORING");
 				break;
 			}
-			printf("\n");
 		}
 
 		// Преобразования систем координат
@@ -236,14 +235,14 @@ bool C3DSObject::Load(const char *FileName, Shader* shader)
 		glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 
 		//printf("  Loading successful. Using buffers %u and %u\n", Buffers[0], Buffers[1]);
-		printf("  Loading successful. Using buffer %u\n", Buffer);
+		WriteLogF("  Loading successful. Using buffer %u\n", Buffer);
 		delete[] VertexListCopy;
 		C3DSObject::shader=shader;
 		return true;
 	}
 	else
 	{
-		printf("  Error: File not found.\n");
+		WriteLogF("  Error: File not found.\n");
 		return false;
 	}
 }
