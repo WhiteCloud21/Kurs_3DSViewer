@@ -20,6 +20,8 @@ public:
 	void LoadShader(string Name);
 	// Активация шейдера
 	void Activate();
+	// Деактивация шейдера
+	void Deactivate();
 	Shader(void);
 	~Shader(void);
 };

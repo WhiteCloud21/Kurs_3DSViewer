@@ -29,6 +29,8 @@ extern string ProgPath;
 extern string ConfigFile;
 extern string LogFile;
 
+extern int windowWidth, windowHeight;
+
 // Функции
 extern void split(const string& str, const string& delim, vector<string>& parts);
 extern string remove_spaces(const string& source);

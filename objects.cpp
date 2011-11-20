@@ -2,6 +2,8 @@
 #include "C3DSObject.h"
 #include "Shader.h"
 
+extern void DrawFps();
+
 struct Vertex {
 	GLfloat Coord[3];
 	GLfloat TexCoord[2];
@@ -327,6 +329,9 @@ void RenderObjects()
 	}
 
 	DrawPlane(0.0,0.0,0.0);
+
+	ModelShader.Deactivate();
+	DrawFps();
 }
 
 // Вычисления, выполняемые в начале программы.

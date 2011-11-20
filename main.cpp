@@ -49,6 +49,8 @@ void Display (void)
 // функция, вызываемая при изменении размеров окна
 void Reshape (int w,int h)
 {
+	windowWidth = w;
+	windowHeight = h;
 	// установить новую область просмотра, равную всей области окна
 	glViewport(0,0,(GLsizei)w, (GLsizei)h);
 

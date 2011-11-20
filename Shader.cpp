@@ -107,6 +107,13 @@ void Shader::Activate()
 		glUseProgram(0);
 }
 
+// Деактивация шейдера
+void Shader::Deactivate()
+{
+		glUseProgram(0);
+}
+
+
 Shader::Shader(void)
 {
 	Loaded = false;
