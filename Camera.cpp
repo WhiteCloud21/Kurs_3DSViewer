@@ -34,7 +34,7 @@ CCamera::CCamera(GLfloat x, GLfloat y, GLfloat z, GLfloat lx, GLfloat ly, GLfloa
 	Recalc();
 }
 
-// ѕересчет матрицы камеры
+// —брос камеры
 void CCamera::Reset(void)
 {
 	position.x=15;
@@ -47,15 +47,21 @@ void CCamera::Reset(void)
 	Recalc();
 }
 
-// —брос камеры
+// ѕересчет матрицы камеры
 void CCamera::Recalc(void)
 {
 	// пересчет векторов
 	forward = ViewPoint - position;
 	forward = normalize(forward);
+	forwardFlat = forward;
+	forwardFlat.y = 0;
+	forwardFlat = normalize(forwardFlat);
 
 	right = cross(forward, vec3(0,1,0));
 	right = normalize(right);
+	rightFlat = right;
+	rightFlat.y = 0;
+	rightFlat = normalize(rightFlat);
 
 	up = cross(right, forward);
 	up = normalize(up);
@@ -108,7 +114,7 @@ void CCamera::Forward(void)
 {
 	if (length(ViewPoint - position)>4)
 	{
-		position=position+normalize(ViewPoint - position);
+		position=position+forward;
 		//SaveToFile();
 	}
 	Recalc();
@@ -119,7 +125,7 @@ void CCamera::Back(void)
 {
 	if (length(ViewPoint - position)<60)
 	{
-		position=position-normalize(ViewPoint - position);
+		position=position-forward;
 		//SaveToFile();
 	}
 	Recalc();
@@ -129,7 +135,7 @@ void CCamera::Back(void)
 void CCamera::Left(void)
 {
 	double r=length(ViewPoint - position);
-	position=position-right-normalize(ViewPoint - position)*(sqrt(r*r-1)-r);
+	position=position-rightFlat+forwardFlat*(sqrt(r*r+1)-r);
 	//SaveToFile();
 	Recalc();
 }
@@ -138,7 +144,7 @@ void CCamera::Left(void)
 void CCamera::Right(void)
 {
 	double r=length(ViewPoint - position);
-	position=position+right+normalize(ViewPoint - position)*(sqrt(r*r-1)-r);
+	position=position+rightFlat+forwardFlat*(sqrt(r*r+1)-r);
 	//SaveToFile();
 	Recalc();
 }
@@ -147,9 +153,9 @@ void CCamera::Right(void)
 void CCamera::Up(void)
 {
 	double r=length(ViewPoint - position);
-	if (asin(position.y/r)<1.5)
+	if (asin(position.y/r)<1.4)
 	{
-		position=position+up+normalize(ViewPoint - position)*(sqrt(r*r-1)-r);
+		position=position+up+forward*(sqrt(r*r+1)-r);
 		//SaveToFile();
 	}
 	Recalc();
@@ -161,7 +167,7 @@ void CCamera::Down(void)
 	double r=length(ViewPoint - position);
 	if (asin(position.y/r)>0.1)
 	{
-		position=position-up-forward*(sqrt(r*r-1)-r);
+		position=position-up+forward*(sqrt(r*r+1)-r);
 		//SaveToFile();
 	}
 	Recalc();

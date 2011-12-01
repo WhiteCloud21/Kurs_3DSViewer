@@ -12,6 +12,9 @@ private:
 	vec3 up;
 	vec3 forward;
 
+	vec3 forwardFlat;
+	vec3 rightFlat;
+
 	GLdouble matrix[16];
 public:
 	CCamera(void);
