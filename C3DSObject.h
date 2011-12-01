@@ -7,6 +7,7 @@ using namespace glm;
 
 class C3DSObject
 {
+	friend class C3DS;
 private:
 	// имя объекта
 	char name[256];
@@ -36,8 +37,12 @@ private:
 	GLuint VertexVBO;
 	// буфер VBO для индексов
 	GLuint IndexVBO;
+	// локальная матрица
+	GLfloat LocalMatrix[12];
 	// шейдер
 	Shader *shader;
+	// конструктор
+	C3DSObject();
 public:
 	// установка позиции
 	void SetPos(GLfloat x, GLfloat y, GLfloat z);
@@ -51,10 +56,9 @@ public:
 	void ClearTexture();
 	// установка текстуры
 	void SetTexture(string);
-	// загрузка файла 3ds и запись в буферы VBO
-	bool Load (const char *FileName, Shader*);
+	//// загрузка файла 3ds и запись в буферы VBO
+	//bool Load (const char *FileName, Shader*);
 	// вывод объекта на экран
 	void Render (void);
-	C3DSObject();
 	~C3DSObject(void);
 };

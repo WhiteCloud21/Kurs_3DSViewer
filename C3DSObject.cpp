@@ -77,175 +77,175 @@ void C3DSObject::SetFilterMode(char mode)
 	}
 }
 
-// загрузка файла 3ds и запись в буферы VBO
-bool C3DSObject::Load(const char *FileName, Shader* shader)
-{
-	bool MeshFirst=false, Flag=true;
-
-	WriteLogF("Loading object \"%s\"...", FileName);
-	
-	// Файл модели
-	ifstream ModelF(FileName, ios::in|ios::binary);
-
-	// Файл существует
-	if (ModelF!=NULL)
-	{
-		ModelF.seekg(0);
-
-		// Идентификатор, определяет тип блока (2 байта)
-		unsigned short chunk_id;
-
-		// Длина блока в байтах (4 байта)
-		unsigned int chunk_len;
-
-		unsigned short *TempPtr;
-		float Local[12]={0.0f};
-
-		while(Flag && ModelF.good())
-		{
-			int gp;
-			// Читаем заголовок чанка
-			ModelF.read((char *)&chunk_id,2);
-			ModelF.read((char *)&chunk_len,4);
-			WriteLogF("  Chunk ID = 0x%hX Length = %u",chunk_id,chunk_len);
-			switch (chunk_id)
-			{
-			// Чанки, которые НЕ пропускаем
-			case 0x4D4D: //MAIN3DS
-			case 0x3D3D: //EDIT3DS
-				break;
-			case 0x4100: //OBJ_TRIMESH
-				Flag=(MeshFirst=!MeshFirst);
-				break;
-			case 0x4000: //EDIT_OBJECT
-				gp = ModelF.tellg();
-				// Читаем имя объекта
-				ModelF.read(name, 255);
-				// Если прочитали лишнего, возвращаемся
-				ModelF.seekg(gp+strlen(name)+1, ios::beg);
-				break;
-			case 0x4110: //POINT_ARRAY
-				// Читаем массив вершин
-				ModelF.read((char *)&VertexCount,2);
-				VertexList = new GLfloat[VertexCount*6];
-				ModelF.read((char *)VertexList,VertexCount*sizeof(GLfloat)*3);
-				// Добавляем в массив цвет!
-				for (int i=VertexCount; i< VertexCount*2; ++i)
-				{
-					VertexList[3*i]=color.r;
-					VertexList[3*i+1]=color.g;
-					VertexList[3*i+2]=color.b;
-				}
-				WriteLogF(" VertexCount = %hu",VertexCount);
-				break;
-			case 0x4120: //FACE_ARRAY
-				// Читаем массив индексов
-				ModelF.read((char *)&IndexCount,2);
-				IndexList = new unsigned short[IndexCount*3];
-				TempPtr=IndexList;
-				for (int i=0;i<IndexCount;++i)
-				{
-					ModelF.read((char *)TempPtr,sizeof(unsigned short)*3);
-					TempPtr+=3;
-					// Пропускаем ненужный параметр
-					ModelF.ignore(sizeof(unsigned short));
-				}
-				IndexCount*=3;
-				WriteLogF(" IndexCount = %hu",IndexCount);
-				break;
-			case 0x4140: //TEX_VERTS
-				// Читаем массив текст. координат
-				ModelF.read((char *)&TexVertCount,2);
-				TexVertList = new GLfloat[TexVertCount*2];
-				ModelF.read((char *)TexVertList,TexVertCount*sizeof(GLfloat)*2);
-				WriteLogF(" TextureVertexCount = %hu",TexVertCount);
-				break;
-			case 0x4160: //MESH_MATRIX
-				// Считывание матрицы
-				ModelF.read((char *)Local,sizeof(Local));
-				break;
-			default:
-				// Пропускаем чанк
-				ModelF.ignore(chunk_len-6);
-				WriteLogF("   IGNORING");
-				break;
-			}
-		}
-
-		// Преобразования систем координат
-		for(int i=0;i<VertexCount;++i)//y и z поменяны местами
-        {
-            //Надо сначала сдвинуть его назад, то есть на вектор
-            //-offset (НЕ на offset),
-			// x
-            VertexList[3*i]-=Local[9];
-			// z
-            VertexList[3*i+1]-=Local[10];
-			// y
-            VertexList[3*i+2]-=Local[11];
-            //а потом применить матрицу поворота rotmatr
-            //Матрица записана построчно
-            //В ней y и z тоже везде обменены местами!
-            float x0=VertexList[3*i];
-            float x1=VertexList[3*i+1];
-            float x2=VertexList[3*i+2];
-            VertexList[3*i]=x0*scale;
-            VertexList[3*i+1]=x2*scale;
-            VertexList[3*i+2]=x1*scale;
-        }
-
-		// дублирование вершин
-		GLfloat *VertexListCopy=new GLfloat[IndexCount*3*2+IndexCount*2];//+нормали+текстурные координаты
-		for(int i=0;i<IndexCount;++i)
-		{
-			for(int k=0;k<3;++k)	
-				VertexListCopy[3*i+k]=VertexList[3*IndexList[i]+k];
-			for(int k=0;k<2;++k)	
-				// добавление текстурных координат
-				VertexListCopy[IndexCount*3*2+2*i+k]=TexVertList[2*IndexList[i]+k];
-		}
-
-		// Вычисление нормалей
-		for(int i=0;i<IndexCount/3;++i)
-		{
-			//A2A1
-			vec3 a1=vec3(VertexListCopy[3*(3*i+2)]-VertexListCopy[3*(3*i+1)], VertexListCopy[3*(3*i+2)+1]-VertexListCopy[3*(3*i+1)+1], VertexListCopy[3*(3*i+2)+2]-VertexListCopy[3*(3*i+1)+2]);
-			//A0A1
-			vec3 a2=vec3(VertexListCopy[3*3*i]-VertexListCopy[3*(3*i+1)], VertexListCopy[3*3*i+1]-VertexListCopy[3*(3*i+1)+1], VertexListCopy[3*3*i+2]-VertexListCopy[3*(3*i+1)+2]);
-			vec3 normal=normalize(-cross(a1, a2));
-			//устанавливаем нормаль для каждой из 3 вершин
-			for(int j=0;j<3;++j)
-				for(int k=0;k<3;++k)
-					VertexListCopy[IndexCount*3+i*9+j*3+k]=normal[k];
-		}
-		// VBO
-		// Получаем свободный идентификатор
-		glGenBuffersARB(1, &Buffer);
-
-		// Выбираем буферы как текущие
-		glBindBufferARB(GL_ARRAY_BUFFER_ARB, Buffer);
-		//glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, Buffers[1]);
-
-		// Заполнение буферов VBO
-		glBufferDataARB(GL_ARRAY_BUFFER_ARB,sizeof(GLfloat)*6*IndexCount+sizeof(GLfloat)*2*IndexCount,VertexListCopy,GL_STATIC_DRAW_ARB);
-		//glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB,sizeof(unsigned short)*IndexCount,IndexList,GL_STATIC_DRAW_ARB);
-
-		// Устанавливаем текущие буферы VBO = 0
-		glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-		glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-
-		//printf("  Loading successful. Using buffers %u and %u\n", Buffers[0], Buffers[1]);
-		WriteLogF("  Loading successful. Using buffer %u\n", Buffer);
-		delete[] VertexListCopy;
-		C3DSObject::shader=shader;
-		return true;
-	}
-	else
-	{
-		WriteLogF("  Error: File not found.\n");
-		return false;
-	}
-}
+//// загрузка файла 3ds и запись в буферы VBO
+//bool C3DSObject::Load(const char *FileName, Shader* shader)
+//{
+//	bool MeshFirst=false, Flag=true;
+//
+//	WriteLogF("Loading object \"%s\"...", FileName);
+//	
+//	// Файл модели
+//	ifstream ModelF(FileName, ios::in|ios::binary);
+//
+//	// Файл существует
+//	if (ModelF!=NULL)
+//	{
+//		ModelF.seekg(0);
+//
+//		// Идентификатор, определяет тип блока (2 байта)
+//		unsigned short chunk_id;
+//
+//		// Длина блока в байтах (4 байта)
+//		unsigned int chunk_len;
+//
+//		unsigned short *TempPtr;
+//		float Local[12]={0.0f};
+//
+//		while(Flag && ModelF.good())
+//		{
+//			int gp;
+//			// Читаем заголовок чанка
+//			ModelF.read((char *)&chunk_id,2);
+//			ModelF.read((char *)&chunk_len,4);
+//			WriteLogF("  Chunk ID = 0x%hX Length = %u",chunk_id,chunk_len);
+//			switch (chunk_id)
+//			{
+//			// Чанки, которые НЕ пропускаем
+//			case 0x4D4D: //MAIN3DS
+//			case 0x3D3D: //EDIT3DS
+//				break;
+//			case 0x4100: //OBJ_TRIMESH
+//				Flag=(MeshFirst=!MeshFirst);
+//				break;
+//			case 0x4000: //EDIT_OBJECT
+//				gp = ModelF.tellg();
+//				// Читаем имя объекта
+//				ModelF.read(name, 255);
+//				// Если прочитали лишнего, возвращаемся
+//				ModelF.seekg(gp+strlen(name)+1, ios::beg);
+//				break;
+//			case 0x4110: //POINT_ARRAY
+//				// Читаем массив вершин
+//				ModelF.read((char *)&VertexCount,2);
+//				VertexList = new GLfloat[VertexCount*6];
+//				ModelF.read((char *)VertexList,VertexCount*sizeof(GLfloat)*3);
+//				// Добавляем в массив цвет!
+//				for (int i=VertexCount; i< VertexCount*2; ++i)
+//				{
+//					VertexList[3*i]=color.r;
+//					VertexList[3*i+1]=color.g;
+//					VertexList[3*i+2]=color.b;
+//				}
+//				WriteLogF(" VertexCount = %hu",VertexCount);
+//				break;
+//			case 0x4120: //FACE_ARRAY
+//				// Читаем массив индексов
+//				ModelF.read((char *)&IndexCount,2);
+//				IndexList = new unsigned short[IndexCount*3];
+//				TempPtr=IndexList;
+//				for (int i=0;i<IndexCount;++i)
+//				{
+//					ModelF.read((char *)TempPtr,sizeof(unsigned short)*3);
+//					TempPtr+=3;
+//					// Пропускаем ненужный параметр
+//					ModelF.ignore(sizeof(unsigned short));
+//				}
+//				IndexCount*=3;
+//				WriteLogF(" IndexCount = %hu",IndexCount);
+//				break;
+//			case 0x4140: //TEX_VERTS
+//				// Читаем массив текст. координат
+//				ModelF.read((char *)&TexVertCount,2);
+//				TexVertList = new GLfloat[TexVertCount*2];
+//				ModelF.read((char *)TexVertList,TexVertCount*sizeof(GLfloat)*2);
+//				WriteLogF(" TextureVertexCount = %hu",TexVertCount);
+//				break;
+//			case 0x4160: //MESH_MATRIX
+//				// Считывание матрицы
+//				ModelF.read((char *)Local,sizeof(Local));
+//				break;
+//			default:
+//				// Пропускаем чанк
+//				ModelF.ignore(chunk_len-6);
+//				WriteLogF("   IGNORING");
+//				break;
+//			}
+//		}
+//
+//		// Преобразования систем координат
+//		for(int i=0;i<VertexCount;++i)//y и z поменяны местами
+//        {
+//            //Надо сначала сдвинуть его назад, то есть на вектор
+//            //-offset (НЕ на offset),
+//			// x
+//            VertexList[3*i]-=Local[9];
+//			// z
+//            VertexList[3*i+1]-=Local[10];
+//			// y
+//            VertexList[3*i+2]-=Local[11];
+//            //а потом применить матрицу поворота rotmatr
+//            //Матрица записана построчно
+//            //В ней y и z тоже везде обменены местами!
+//            float x0=VertexList[3*i];
+//            float x1=VertexList[3*i+1];
+//            float x2=VertexList[3*i+2];
+//            VertexList[3*i]=x0*scale;
+//            VertexList[3*i+1]=x2*scale;
+//            VertexList[3*i+2]=x1*scale;
+//        }
+//
+//		// дублирование вершин
+//		GLfloat *VertexListCopy=new GLfloat[IndexCount*3*2+IndexCount*2];//+нормали+текстурные координаты
+//		for(int i=0;i<IndexCount;++i)
+//		{
+//			for(int k=0;k<3;++k)	
+//				VertexListCopy[3*i+k]=VertexList[3*IndexList[i]+k];
+//			for(int k=0;k<2;++k)	
+//				// добавление текстурных координат
+//				VertexListCopy[IndexCount*3*2+2*i+k]=TexVertList[2*IndexList[i]+k];
+//		}
+//
+//		// Вычисление нормалей
+//		for(int i=0;i<IndexCount/3;++i)
+//		{
+//			//A2A1
+//			vec3 a1=vec3(VertexListCopy[3*(3*i+2)]-VertexListCopy[3*(3*i+1)], VertexListCopy[3*(3*i+2)+1]-VertexListCopy[3*(3*i+1)+1], VertexListCopy[3*(3*i+2)+2]-VertexListCopy[3*(3*i+1)+2]);
+//			//A0A1
+//			vec3 a2=vec3(VertexListCopy[3*3*i]-VertexListCopy[3*(3*i+1)], VertexListCopy[3*3*i+1]-VertexListCopy[3*(3*i+1)+1], VertexListCopy[3*3*i+2]-VertexListCopy[3*(3*i+1)+2]);
+//			vec3 normal=normalize(-cross(a1, a2));
+//			//устанавливаем нормаль для каждой из 3 вершин
+//			for(int j=0;j<3;++j)
+//				for(int k=0;k<3;++k)
+//					VertexListCopy[IndexCount*3+i*9+j*3+k]=normal[k];
+//		}
+//		// VBO
+//		// Получаем свободный идентификатор
+//		glGenBuffersARB(1, &Buffer);
+//
+//		// Выбираем буферы как текущие
+//		glBindBufferARB(GL_ARRAY_BUFFER_ARB, Buffer);
+//		//glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, Buffers[1]);
+//
+//		// Заполнение буферов VBO
+//		glBufferDataARB(GL_ARRAY_BUFFER_ARB,sizeof(GLfloat)*6*IndexCount+sizeof(GLfloat)*2*IndexCount,VertexListCopy,GL_STATIC_DRAW_ARB);
+//		//glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB,sizeof(unsigned short)*IndexCount,IndexList,GL_STATIC_DRAW_ARB);
+//
+//		// Устанавливаем текущие буферы VBO = 0
+//		glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+//		glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+//
+//		//printf("  Loading successful. Using buffers %u and %u\n", Buffers[0], Buffers[1]);
+//		WriteLogF("  Loading successful. Using buffer %u\n", Buffer);
+//		delete[] VertexListCopy;
+//		C3DSObject::shader=shader;
+//		return true;
+//	}
+//	else
+//	{
+//		WriteLogF("  Error: File not found.\n");
+//		return false;
+//	}
+//}
 
 // вывод на экран
 void C3DSObject::Render(void)
@@ -320,6 +320,10 @@ C3DSObject::C3DSObject()
 	Buffer=0;
 	color = vec3(0,0,1);
 	texture.imageData = NULL;
+	VertexList = NULL;
+	IndexList = NULL;
+	VertexCount = 0;
+	IndexCount = 0;
 }
 
 C3DSObject::~C3DSObject(void)
