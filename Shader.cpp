@@ -72,7 +72,7 @@ void Shader::LoadShader(string Name)
 	FShader=glCreateShader(GL_FRAGMENT_SHADER);
 	PShader=glCreateProgram();
 	
-	WriteLogF("\nLoading shader program \"%s\"...", Name.c_str());
+	WriteLogF("Loading shader program \"%s\"...", Name.c_str());
 	Loaded=false;
 	// Загрузка ВШ и ФШ
 	if (Load(VShader, ProgPath+"Shaders\\"+Name+".vsh") && Load(FShader,  ProgPath+"Shaders\\"+Name+".fsh"))

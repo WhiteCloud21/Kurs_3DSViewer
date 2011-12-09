@@ -166,6 +166,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\3DSLoader.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\C3DS.cpp"
 				>
 			</File>
@@ -183,6 +187,10 @@
 			</File>
 			<File
 				RelativePath=".\fps.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Light.cpp"
 				>
 			</File>
 			<File
@@ -212,6 +220,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\3DSLoader.h"
+				>
+			</File>
+			<File
 				RelativePath=".\C3DS.h"
 				>
 			</File>
@@ -225,6 +237,10 @@
 			</File>
 			<File
 				RelativePath=".\data.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Light.h"
 				>
 			</File>
 			<File

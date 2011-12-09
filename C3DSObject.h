@@ -1,6 +1,8 @@
 #pragma once
 #include "main.h"
 #include "Shader.h"
+#include "Camera.h"
+#include "Light.h"
 #include <fstream>
 
 using namespace glm;
@@ -8,6 +10,7 @@ using namespace glm;
 class C3DSObject
 {
 	friend class C3DS;
+	friend void ReadChunk(ifstream &, vector<C3DSObject*> &, vector<CCamera*> &, vector<CLight*> &);
 private:
 	// имя объекта
 	char name[256];

@@ -1,12 +1,13 @@
 #include <conio.h>
 #include <stdio.h>
 #include "main.h"
-#include "C3DSObject.h"
+#include "C3DS.h"
 #include "Camera.h"
 #include "Shader.h"
 #include "vkscancodes.h"
 
-CCamera camera;
+extern C3DS scene;
+CCamera* camera;
 
 inline string GetPathFromFilename( const string& filename )
 {
@@ -37,7 +38,7 @@ void Display (void)
 	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 
 	// устанавливаем камеру
-	camera.ApplyCamera();
+	camera->ApplyCamera();
 
 	// отрисовка объектов
 	RenderObjects();
@@ -57,7 +58,7 @@ void Reshape (int w,int h)
 	// установить матрицу проекции с правильным аспектом
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(25.0,((float)w)/h,1.0,100.0);
+	gluPerspective(25.0,((float)w)/h,1.0,1000.0);
 
 	// принудительно перерисовать окно
 	glutPostRedisplay();
@@ -72,59 +73,6 @@ void Simulation(void)
 
 void KeyPressed(unsigned char c, int, int)
 {
-	//switch (c)
-	//{
-	//	case '+':
-	//		camera.Forward();
-	//		break;
-	//	case '-':
-	//		camera.Back();
-	//		break;
-	//	case 'w':
-	//	case 'W':
-	//	case 214:
-	//	case 246:
-	//		camera.Up();
-	//		break;
-	//	case 's':
-	//	case 'S':
-	//	case 219:
-	//	case 251:
-	//		camera.Down();
-	//		break;
-	//	case 'a':
-	//	case 'A':
-	//	case 212:
-	//	case 244:
-	//		camera.Left();
-	//		break;
-	//	case 'd':
-	//	case 'D':
-	//	case 226:
-	//	case 194:
-	//		camera.Right();
-	//		break;
-	//	case 'r':
-	//	case 'R':
-	//	case 202:
-	//	case 234:
-	//		camera.Reset();
-	//		break;	
-	//	case 'l':
-	//	case 'L':
-	//	case 228:
-	//	case 196:
-	//		ToggleCullFace();
-	//		break;	
-	//	case 229:
-	//	case 197:
-	//	case 't':
-	//	case 'T':
-	//		ChangeTextureFilter();
-	//		break;
-	//	/*default:
-	//		printf("%i",c);*/
-	//}
 	// получение клавиатурной раскладки основного потока программы
 	HKL _keyboardLayout = GetKeyboardLayout(0);
 	// получение виртуального кода нажатой клавиши
@@ -133,35 +81,35 @@ void KeyPressed(unsigned char c, int, int)
 	switch (c)
 	{
 		case '+':
-			camera.Forward();
+			camera->Forward();
 			break;
 		case '-':
-			camera.Back();
+			camera->Back();
 			break;
 	}
 
 	switch (_key)
 	{
 		case VK_ADD:
-			camera.Forward();
+			camera->Forward();
 			break;
 		case VK_SUBTRACT:
-			camera.Back();
+			camera->Back();
 			break;
 		case VK_W:
-			camera.Up();
+			camera->Up();
 			break;
 		case VK_S:
-			camera.Down();
+			camera->Down();
 			break;
 		case VK_A:
-			camera.Left();
+			camera->Left();
 			break;
 		case VK_D:
-			camera.Right();
+			camera->Right();
 			break;
 		case VK_R:
-			camera.Reset();
+			camera->Reset();
 			break;	
 		case VK_L:
 			ToggleCullFace();
@@ -259,13 +207,11 @@ void main (int argc,char **argv)
 		exit(1);
 	}
 
-	// первоначальные вычисления
-	PreCalcObjects();
+	// загрузка объектов
 	LoadObjects();
 
-	// загрузка позиции камеры из файла
 	printf("\n");
-	camera.LoadFromFile();
+	camera = scene.GetCurrentCamera();
 	
 	// основной цикл обработки сообщений ОС
 	glutMainLoop();

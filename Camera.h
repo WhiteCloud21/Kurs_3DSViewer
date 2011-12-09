@@ -1,3 +1,6 @@
+#ifndef __Camera_h__
+#define __Camera_h__
+
 #include "main.h"
 #include <windows.h>
 
@@ -7,13 +10,11 @@ class CCamera
 {
 private:
 	vec3 position;
+	vec3 positionDefault;
 	vec3 ViewPoint;
 	vec3 right;
 	vec3 up;
 	vec3 forward;
-
-	vec3 forwardFlat;
-	vec3 rightFlat;
 
 	GLdouble matrix[16];
 public:
@@ -29,6 +30,5 @@ public:
 	void Right(void);
 	void Up(void);
 	void Down(void);
-	void LoadFromFile(void);
-	void SaveToFile(void);
 };
+#endif

@@ -43,7 +43,5 @@ extern string getNowToString();
 extern void ChangeTextureFilter();
 extern void LoadObjects();
 extern void RenderObjects();
-extern void DrawPlane(GLfloat x, GLfloat y, GLfloat z, GLfloat r, GLfloat g, GLfloat b);
-extern void PreCalcObjects();
 
 extern bool LoadTGA(Texture * texture, char * filename);

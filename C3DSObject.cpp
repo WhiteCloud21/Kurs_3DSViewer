@@ -278,7 +278,7 @@ void C3DSObject::Render(void)
 		// Установка текущего ТБ
 		glUniform1i(sampler,0);
 
-		// Связывание ТБ с текустурой
+		// Связывание ТБ с текстурой
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D,texture.texID);
 

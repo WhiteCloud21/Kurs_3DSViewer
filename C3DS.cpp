@@ -1,5 +1,8 @@
 #include "C3DS.h"
 
+// загрузка файла 3ds
+extern bool Load3DSFile(const char *FileName, vector<C3DSObject*> &objects, vector<CCamera*> &cameras, vector<CLight*> &lights);
+
 // установка режима фильтрации
 void C3DS::SetFilterMode(char mode)
 {
@@ -7,139 +10,85 @@ void C3DS::SetFilterMode(char mode)
 		objects[i]->SetFilterMode(mode);
 }
 
+// Получение текущей камеры
+CCamera* C3DS::GetCurrentCamera()
+{
+	return cameras[cameraIndex];
+}
+
+// Получение следующей камеры
+CCamera* C3DS::GetNextCamera()
+{
+	return cameras[(++cameraIndex)%cameras.size()];
+}
+
+// Получение текущего источника света
+CLight* C3DS::GetCurrentLight()
+{
+	if (lightIndex >= 0)
+		return lights[lightIndex];
+	else
+		return NULL;
+}
+
+// Получение следующего источника света
+CLight* C3DS::GetNextLight()
+{
+	if (lightIndex >= 0)
+		return lights[(++lightIndex)%lights.size()];
+	else
+		return NULL;
+}
+
 // загрузка файла 3ds
 bool C3DS::Load(const char *FileName, Shader* shader)
 {
-	C3DSObject * currentObject = NULL;
+	bool _retBool = false;
 	UseDestructors=false;
-
-	bool MeshFirst=false;
+	cameraIndex = 0;
+	lightIndex = -1;
 
 	WriteLogF("Loading scene \"%s\"...", FileName);
-	
-	// Файл модели
-	ifstream ModelF(FileName, ios::in|ios::binary);
 
 	// Файл существует
-	if (ModelF!=NULL)
+	if (Load3DSFile(FileName, objects, cameras, lights)!=NULL)
 	{
-		ModelF.seekg(0);
-
-		// Идентификатор, определяет тип блока (2 байта)
-		unsigned short chunk_id;
-
-		// Длина блока в байтах (4 байта)
-		unsigned int chunk_len;
-
-		unsigned short *TempPtr;
-
-		while(ModelF.good())
+		if (cameras.size() == 0)
 		{
-			int gp;
-			// Читаем заголовок чанка
-			ModelF.read((char *)&chunk_id,2);
-			ModelF.read((char *)&chunk_len,4);
-			WriteLogF("  Chunk ID = 0x%hX Length = %u",chunk_id,chunk_len);
-			switch (chunk_id)
-			{
-			// Чанки, которые НЕ пропускаем
-			case 0x4D4D: //MAIN3DS
-			case 0x3D3D: //EDIT3DS
-				break;
-			case 0x4100: //OBJ_TRIMESH
-				MeshFirst=!MeshFirst;
-				if (!MeshFirst)
-				{
-					// ВРЕМЕННО Пропускаем чанк
-					ModelF.ignore(chunk_len-6);
-					WriteLogF("   IGNORING, not first OBJ_TRIMESH");
-				}
-				break;
-			case 0x4000: //EDIT_OBJECT
-				MeshFirst = false;
-				currentObject = new C3DSObject();
-				objects.push_back(currentObject);
-				gp = ModelF.tellg();
-				// Читаем имя объекта
-				ModelF.read(currentObject->name, 255);
-				// Если прочитали лишнего, возвращаемся
-				ModelF.seekg(gp+strlen(currentObject->name)+1, ios::beg);
-				break;
-			case 0x4110: //POINT_ARRAY
-				// Читаем массив вершин
-				ModelF.read((char *)&(currentObject->VertexCount),2);
-				currentObject->VertexList = new GLfloat[currentObject->VertexCount*6];
-				ModelF.read((char *)currentObject->VertexList,currentObject->VertexCount*sizeof(GLfloat)*3);
-				// Добавляем в массив цвет!
-				for (int i=currentObject->VertexCount; i< currentObject->VertexCount*2; ++i)
-				{
-					currentObject->VertexList[3*i]=currentObject->color.r;
-					currentObject->VertexList[3*i+1]=currentObject->color.g;
-					currentObject->VertexList[3*i+2]=currentObject->color.b;
-				}
-				WriteLogF(" VertexCount = %hu",currentObject->VertexCount);
-				break;
-			case 0x4120: //FACE_ARRAY
-				// Читаем массив индексов
-				ModelF.read((char *)&(currentObject->IndexCount),2);
-				currentObject->IndexList = new unsigned short[currentObject->IndexCount*3];
-				TempPtr=currentObject->IndexList;
-				for (int i=0;i<currentObject->IndexCount;++i)
-				{
-					ModelF.read((char *)TempPtr,sizeof(unsigned short)*3);
-					TempPtr+=3;
-					// Пропускаем ненужный параметр
-					ModelF.ignore(sizeof(unsigned short));
-				}
-				currentObject->IndexCount*=3;
-				WriteLogF(" IndexCount = %hu",currentObject->IndexCount);
-				break;
-			case 0x4140: //TEX_VERTS
-				// Читаем массив текст. координат
-				ModelF.read((char *)&(currentObject->TexVertCount),2);
-				currentObject->TexVertList = new GLfloat[currentObject->TexVertCount*2];
-				ModelF.read((char *)currentObject->TexVertList,currentObject->TexVertCount*sizeof(GLfloat)*2);
-				WriteLogF(" TextureVertexCount = %hu",currentObject->TexVertCount);
-				break;
-			case 0x4160: //MESH_MATRIX
-				// Считывание матрицы
-				ModelF.read((char *)currentObject->LocalMatrix,sizeof(currentObject->LocalMatrix));
-				break;
-			default:
-				// Пропускаем чанк
-				ModelF.ignore(chunk_len-6);
-				WriteLogF("   IGNORING");
-				break;
-			}
+			cameras.push_back(new CCamera());
+			WriteLogF("Cameras not found. Created default camera.");
 		}
+
+		if (lights.size() > 0)
+			lightIndex = 0;
 
 		if (objects.size() > 0 && objects.back()->VertexCount == 0)
 			objects.pop_back();
 
 		for (uint _objNum = 0; _objNum < objects.size(); _objNum++)
 		{
-			currentObject = objects[_objNum];
+			C3DSObject * currentObject = objects[_objNum];
 			// Преобразования систем координат
-			for(int i=0;i<currentObject->VertexCount;++i)//y и z поменяны местами
-					{
-							//Надо сначала сдвинуть его назад, то есть на вектор
-							//-offset (НЕ на offset),
-							// x
-							currentObject->VertexList[3*i]-=currentObject->LocalMatrix[9];
-							// z
-							currentObject->VertexList[3*i+1]-=currentObject->LocalMatrix[10];
-							// y
-							currentObject->VertexList[3*i+2]-=currentObject->LocalMatrix[11];
-							//а потом применить матрицу поворота rotmatr
-							//Матрица записана построчно
-							//В ней y и z тоже везде обменены местами!
-							GLfloat x0=-currentObject->VertexList[3*i];
-							GLfloat x1=-currentObject->VertexList[3*i+1];
-							GLfloat x2=-currentObject->VertexList[3*i+2];
-							currentObject->VertexList[3*i]=currentObject->LocalMatrix[0]*x0+currentObject->LocalMatrix[2]*x1+currentObject->LocalMatrix[1]*x2;
-							currentObject->VertexList[3*i+2]=currentObject->LocalMatrix[3]*x0+currentObject->LocalMatrix[5]*x1+currentObject->LocalMatrix[4]*x2;
-							currentObject->VertexList[3*i+1]=currentObject->LocalMatrix[6]*x0+currentObject->LocalMatrix[8]*x1+currentObject->LocalMatrix[7]*x2;
-					}
+			//for(int i=0;i<currentObject->VertexCount;++i)
+			//{
+			//		//Надо сначала сдвинуть его назад, то есть на вектор
+			//		//-offset (НЕ на offset),
+			//		// x
+			//		currentObject->VertexList[3*i]-=currentObject->LocalMatrix[9];
+			//		// y
+			//		currentObject->VertexList[3*i+1]-=currentObject->LocalMatrix[11];
+			//		// z
+			//		currentObject->VertexList[3*i+2]-=currentObject->LocalMatrix[10];
+			//		//а потом применить матрицу поворота rotmatr
+			//		//Матрица записана построчно
+			//		//В ней y и z тоже везде обменены местами!
+			//		GLfloat x=-currentObject->VertexList[3*i];
+			//		GLfloat y=-currentObject->VertexList[3*i+1];
+			//		GLfloat z=-currentObject->VertexList[3*i+2];
+			//		currentObject->VertexList[3*i]=currentObject->LocalMatrix[0]*x+currentObject->LocalMatrix[2]*z+currentObject->LocalMatrix[1]*y;
+			//		currentObject->VertexList[3*i+2]=currentObject->LocalMatrix[3]*x+currentObject->LocalMatrix[5]*z+currentObject->LocalMatrix[4]*y;
+			//		currentObject->VertexList[3*i+1]=currentObject->LocalMatrix[6]*x+currentObject->LocalMatrix[8]*z+currentObject->LocalMatrix[7]*y;
+			//}
 
 			// дублирование вершин
 			GLfloat *VertexListCopy=new GLfloat[currentObject->IndexCount*4*2];//+нормали+текстурные координаты
@@ -186,15 +135,15 @@ bool C3DS::Load(const char *FileName, Shader* shader)
 			delete[] VertexListCopy;
 			currentObject->shader=shader;
 		}
-		return true;
+		UseDestructors=true;
+		_retBool = true;
 	}
 	else
 	{
 		WriteLogF("  Error: File not found.\n");
-		return false;
+		_retBool = false;
 	}
-	
-	UseDestructors=true;
+	return _retBool;
 }
 
 // вывод на экран
@@ -213,5 +162,9 @@ C3DS::~C3DS(void)
 {
 	for (uint i = 0; i < objects.size(); i++)
 		delete objects[i];
+	for (uint i = 0; i < cameras.size(); i++)
+		delete cameras[i];
+
 	objects.clear();
+	cameras.clear();
 }
