@@ -1,5 +1,11 @@
 #include "C3DSObject.h"
 
+// установка имени
+void C3DSObject::SetName(char* name)
+{
+	this->name = string(name);
+}
+
 // установка позиции
 void C3DSObject::SetPos(GLfloat x, GLfloat y, GLfloat z)
 {
@@ -300,7 +306,15 @@ void C3DSObject::Render(void)
 	glNormalPointer(GL_FLOAT,0,reinterpret_cast<void *>(IndexCount*3*sizeof(*VertexList)));
 	// вывод полигонов
 	//glDrawElements(GL_TRIANGLES,IndexCount,GL_UNSIGNED_SHORT,0);
-	glDrawArrays(GL_TRIANGLES,0,IndexCount);
+	//glDrawArrays(GL_TRIANGLES,0,IndexCount);
+
+	for (vector<CVBOInfo>::iterator _it=IndexVBO.begin() ; _it != IndexVBO.end(); _it++ )
+	{
+		glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, _it->buffer);
+		_it->material->Apply();
+		glDrawElements(GL_TRIANGLES,_it->bufSize,GL_UNSIGNED_SHORT,0);
+		glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+	}
 
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
@@ -332,6 +346,9 @@ C3DSObject::~C3DSObject(void)
 	if (Buffer!=0 && UseDestructors)
 	{
 		glDeleteBuffersARB(1, &Buffer);
+
+		for (vector<CVBOInfo>::iterator _it=IndexVBO.begin() ; _it != IndexVBO.end(); _it++ )
+			glDeleteBuffersARB(1, &(_it->buffer));
 		delete[] IndexList;
 		delete[] VertexList;
 		delete[] TexVertList;

@@ -198,6 +198,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Material.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\objects.cpp"
 				>
 			</File>
@@ -211,6 +215,10 @@
 			</File>
 			<File
 				RelativePath=".\utils.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\VBOInfo.cpp"
 				>
 			</File>
 		</Filter>
@@ -252,6 +260,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Material.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Shader.h"
 				>
 			</File>
@@ -261,6 +273,10 @@
 			</File>
 			<File
 				RelativePath=".\tga.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VBOInfo.h"
 				>
 			</File>
 			<File

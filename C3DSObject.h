@@ -3,6 +3,8 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "Light.h"
+#include "Material.h"
+#include "VBOInfo.h"
 #include <fstream>
 
 using namespace glm;
@@ -10,10 +12,10 @@ using namespace glm;
 class C3DSObject
 {
 	friend class C3DS;
-	friend void ReadChunk(ifstream &, vector<C3DSObject*> &, vector<CCamera*> &, vector<CLight*> &);
+	friend void ReadChunk(ifstream &, vector<C3DSObject*> &, vector<CCamera*> &, vector<CLight*> &, vector<CMaterial*> &);
 private:
 	// имя объекта
-	char name[256];
+	string name;
 	// позиция объекта
 	vec3 position;
 	// цвет объекта
@@ -39,14 +41,17 @@ private:
 	// буфер VBO для вершин
 	GLuint VertexVBO;
 	// буфер VBO для индексов
-	GLuint IndexVBO;
+	vector<CVBOInfo> IndexVBO;
 	// локальная матрица
 	GLfloat LocalMatrix[12];
 	// шейдер
 	Shader *shader;
 	// конструктор
 	C3DSObject();
+	~C3DSObject(void);
 public:
+	// установка имени
+	void SetName(char* name);
 	// установка позиции
 	void SetPos(GLfloat x, GLfloat y, GLfloat z);
 	// установка цвета
@@ -63,5 +68,4 @@ public:
 	//bool Load (const char *FileName, Shader*);
 	// вывод объекта на экран
 	void Render (void);
-	~C3DSObject(void);
 };

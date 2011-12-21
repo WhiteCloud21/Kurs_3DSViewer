@@ -11,10 +11,13 @@ unsigned short GetChunkId(ifstream &ModelF)
 }
 
 // чтение чанка
-void ReadChunk(ifstream &ModelF, vector<C3DSObject*> &objects, vector<CCamera*> &cameras, vector<CLight*> &lights)
+void ReadChunk(ifstream &ModelF, vector<C3DSObject*> &objects, vector<CCamera*> &cameras, vector<CLight*> &lights, vector<CMaterial*> &materials)
 {
 	GLfloat _tempFloat;
-	GLbyte _tempByte;
+	GLubyte _tempByte;
+	GLint _tempInt;
+	GLuint _tempUint;
+	GLushort _tempShort, _tempShort2;
 	GLfloat _posX, _posY, _posZ, _tX, _tY, _tZ;
 
 	C3DSObject* currentObject = NULL;
@@ -23,11 +26,16 @@ void ReadChunk(ifstream &ModelF, vector<C3DSObject*> &objects, vector<CCamera*> 
 
 	// Идентификатор, определяет тип блока (2 байта)
 	unsigned short chunk_id;
+	unsigned short temp_chunk_id;
 
 	// Длина блока в байтах (4 байта)
 	unsigned int chunk_len;
 
 	int gp;
+	char _tempChar;
+	char * _name = NULL;
+	int _len;
+	bool _flag;
 	// Читаем заголовок чанка
 	ModelF.read((char *)&chunk_id,sizeof(chunk_id));
 	ModelF.read((char *)&chunk_len,sizeof(chunk_len));
@@ -43,30 +51,129 @@ void ReadChunk(ifstream &ModelF, vector<C3DSObject*> &objects, vector<CCamera*> 
 		color.g = _tempFloat;
 		ModelF.read((char *)&_tempFloat, sizeof(GLfloat));
 		color.b = _tempFloat;
-		isColor24Bit = false;
 		WriteLogF("   Loaded color: (%f; %f; %f)", color.r, color.g, color.b);
 		break;
 	case 0x0011: //RGB_COLOR_24BIT
 		// Загрузка цвета
-		ModelF.read((char *)&_tempByte, sizeof(GLbyte));
-		colorByte.r = _tempByte;
-		ModelF.read((char *)&_tempByte, sizeof(GLbyte));
-		colorByte.g = _tempByte;
-		ModelF.read((char *)&_tempByte, sizeof(GLbyte));
-		colorByte.b = _tempByte;
-		isColor24Bit = true;
-		//WriteLogF(" Loaded color: (%f; %f; %f)", color.r, color.g, color.b);
+		ModelF.read((char *)&_tempByte, sizeof(GLubyte));
+		color.r = _tempByte / 255.0;
+		ModelF.read((char *)&_tempByte, sizeof(GLubyte));
+		color.g = _tempByte / 255.0;
+		ModelF.read((char *)&_tempByte, sizeof(GLubyte));
+		color.b = _tempByte / 255.0;
+		WriteLogF("   Loaded color: (%f; %f; %f)", color.r, color.g, color.b);
+		break;
+	case 0x0030: //PERCENT_INT
+		// Загрузка процента
+		ModelF.read((char *)&_tempShort, sizeof(GLshort));
+		percent = _tempShort;
+		WriteLogF("   Loaded percent: (%f)", percent);
 		break;
 	case 0x4D4D: //MAIN3DS
 	case 0x3D3D: //EDIT3DS
+		break;
+	case 0xAFFF: //EDIT_MATERIAL
+		// Загрузка параметров материала
+		materials.push_back(new CMaterial());
+		WriteLogF(" Loading material...");
+		temp_chunk_id = GetChunkId(ModelF);
+		while (temp_chunk_id >= 0xA000 && temp_chunk_id < 0xAFFF)
+		{
+			ReadChunk(ModelF, objects, cameras, lights, materials);
+			temp_chunk_id = GetChunkId(ModelF);
+		}
+		break;
+	case 0xA000: //MATERIAL_NAME
+		gp = ModelF.tellg();
+		// Читаем имя
+		_len = 0;
+		do
+		{
+			ModelF.read((char *)&_tempChar, 1);
+			_len++;
+		} while (_tempChar != '\0');
+		ModelF.seekg(gp, ios::beg);
+		delete[] objectName;
+		objectName = new char[_len];
+		ModelF.read(objectName, _len);
+		materials.back()->SetName(objectName);
+		WriteLogF("    Material name = \"%s\"", objectName);
+		break;
+	case 0xA010: //MATERIAL_AMBIENT_COLOR
+		temp_chunk_id = GetChunkId(ModelF);
+		color = vec3(1.0f, 1.0f, 1.0f);
+		while (temp_chunk_id == 0x0010 || temp_chunk_id == 0x0011)
+		{
+			ReadChunk(ModelF, objects, cameras, lights, materials);
+			temp_chunk_id = GetChunkId(ModelF);
+		}
+		materials.back()->SetAmbient(color);
+		break;
+	case 0xA020: //MATERIAL_DIFFUSE_COLOR
+		temp_chunk_id = GetChunkId(ModelF);
+		color = vec3(1.0f, 1.0f, 1.0f);
+		while (temp_chunk_id == 0x0010 || temp_chunk_id == 0x0011)
+		{
+			ReadChunk(ModelF, objects, cameras, lights, materials);
+			temp_chunk_id = GetChunkId(ModelF);
+		}
+		materials.back()->SetDiffuse(color);
+		break;
+	case 0xA030: //MATERIAL_SPECULAR_COLOR
+		temp_chunk_id = GetChunkId(ModelF);
+		color = vec3(1.0f, 1.0f, 1.0f);
+		while (temp_chunk_id == 0x0010 || temp_chunk_id == 0x0011)
+		{
+			ReadChunk(ModelF, objects, cameras, lights, materials);
+			temp_chunk_id = GetChunkId(ModelF);
+		}
+		materials.back()->SetSpecular(color);
+		break;
+	case 0xA040: //MATERIAL_SHININESS
+		temp_chunk_id = GetChunkId(ModelF);
+		percent = 32.0;
+		while (temp_chunk_id == 0x0030 || temp_chunk_id == 0x0031)
+		{
+			ReadChunk(ModelF, objects, cameras, lights, materials);
+			temp_chunk_id = GetChunkId(ModelF);
+		}
+		materials.back()->SetShininess(percent);
+		break;
+	case 0xA041: //MATERIAL_SHININESSSTRENGTH
+		temp_chunk_id = GetChunkId(ModelF);
+		percent = 32.0;
+		while (temp_chunk_id == 0x0030 || temp_chunk_id == 0x0031)
+		{
+			ReadChunk(ModelF, objects, cameras, lights, materials);
+			temp_chunk_id = GetChunkId(ModelF);
+		}
+		materials.back()->SetShininessStrength(percent);
+		break;
+	case 0xA084: //MATERIAL_SELFILLUM
+		temp_chunk_id = GetChunkId(ModelF);
+		percent = 0.0;
+		while (temp_chunk_id == 0x0030 || temp_chunk_id == 0x0031)
+		{
+			ReadChunk(ModelF, objects, cameras, lights, materials);
+			temp_chunk_id = GetChunkId(ModelF);
+		}
+		materials.back()->SetSelfIllum(percent);
 		break;
 	case 0x4000: //EDIT_OBJECT
 		meshFirst = false;
 		gp = ModelF.tellg();
 		// Читаем имя объекта
-		ModelF.read(objectName, 255);
-		// Если прочитали лишнего, возвращаемся
-		ModelF.seekg(gp+strlen(objectName)+1, ios::beg);
+		_len = 0;
+		do
+		{
+			ModelF.read((char *)&_tempChar, 1);
+			_len++;
+		} while (_tempChar != '\0');
+		ModelF.seekg(gp, ios::beg);
+		delete[] objectName;
+		objectName = new char[_len];
+		ModelF.read(objectName, _len);
+		WriteLogF("    Object name = \"%s\"", objectName);
 		break;
 	case 0x4100: //OBJ_TRIMESH
 		meshFirst=!meshFirst;
@@ -80,7 +187,8 @@ void ReadChunk(ifstream &ModelF, vector<C3DSObject*> &objects, vector<CCamera*> 
 		{
 			// Начинается загрузка нового объекта
 			currentObject = new C3DSObject();
-			strcpy_s(currentObject->name, objectName);
+			currentObject->SetName(objectName);
+			//delete[] objectName;
 			objects.push_back(currentObject);
 		}
 		break;
@@ -120,6 +228,47 @@ void ReadChunk(ifstream &ModelF, vector<C3DSObject*> &objects, vector<CCamera*> 
 		currentObject->IndexCount*=3;
 		WriteLogF(" IndexCount = %hu",currentObject->IndexCount);
 		break;
+	case 0x4130: //FACE_MATERIALS_ARRAY
+		gp = ModelF.tellg();
+		// Читаем имя
+		_len = 0;
+		do
+		{
+			ModelF.read((char *)&_tempChar, 1);
+			_len++;
+		} while (_tempChar != '\0');
+		ModelF.seekg(gp, ios::beg);
+		_name = new char[_len];
+		ModelF.read(_name, _len);
+		ModelF.read((char *)&(_tempShort),sizeof(GLushort));
+		WriteLogF("   Material '%s' Count = %hu", _name, _tempShort);
+		if (_tempShort > 0)
+		{
+			for (vector<CMaterial*>::iterator _it = materials.begin(); _it != materials.end(); _it++)
+			{
+				if (strcmp((*_it)->GetName(), _name) == 0)
+				{
+					GLushort* _shArr = new GLushort[3*_tempShort];
+					for (int i = 0; i < _tempShort; i++)
+					{
+						ModelF.read((char *)&(_tempShort2),sizeof(GLushort));
+						_shArr[3*i] = 3*_tempShort2;
+						_shArr[3*i+1] = 3*_tempShort2+1;
+						_shArr[3*i+2] = 3*_tempShort2+2;
+					}
+					glGenBuffersARB(1, &_tempUint);
+					glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, _tempUint);
+					glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof(GLushort)*3*_tempShort, _shArr, GL_STATIC_DRAW_ARB);
+					glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+					currentObject->IndexVBO.push_back(CVBOInfo(_tempUint, 3*_tempShort, *_it));
+					WriteLogF("      Created buffer %u", _tempUint);
+					delete[] _shArr;
+					break;
+				}
+			}
+			delete[] _name;
+		}
+		break;
 	case 0x4140: //TEX_VERTS
 		// Читаем массив текст. координат
 		ModelF.read((char *)&(currentObject->TexVertCount),2);
@@ -138,23 +287,14 @@ void ReadChunk(ifstream &ModelF, vector<C3DSObject*> &objects, vector<CCamera*> 
 		ModelF.read((char *)&_posY, sizeof(GLfloat));
 		lights.push_back(new CLight(isLightEnabled, vec3(_posX, _posY, -_posZ)));
 		WriteLogF(" Loaded light: (%f; %f; %f)", _posX, _posY, -_posZ);
-		unsigned short temp_chunk_id;
 		temp_chunk_id = GetChunkId(ModelF);
 		color = vec3(1.0f, 1.0f, 1.0f);
-		isColor24Bit = false;
 		while (temp_chunk_id == 0x0010 || temp_chunk_id == 0x0011 || (temp_chunk_id >= 0x4600 && temp_chunk_id < 0x4700))
 		{
-			ReadChunk(ModelF, objects, cameras, lights);
+			ReadChunk(ModelF, objects, cameras, lights, materials);
 			temp_chunk_id = GetChunkId(ModelF);
 		}
-		if (isColor24Bit)
-		{
-			lights.back()->SetColor(colorByte);
-		}
-		else
-		{
-			lights.back()->SetColor(color);
-		}
+		lights.back()->SetColor(color);
 		break;
 	case 0x4610: //LIGHT_SPOTLIGHT
 		// Загрузка направленного источника света
@@ -193,7 +333,7 @@ void ReadChunk(ifstream &ModelF, vector<C3DSObject*> &objects, vector<CCamera*> 
 }
 
 // загрузка файла 3ds
-bool Load3DSFile(const char *FileName, vector<C3DSObject*> &objects, vector<CCamera*> &cameras, vector<CLight*> &lights)
+bool Load3DSFile(const char *FileName, vector<C3DSObject*> &objects, vector<CCamera*> &cameras, vector<CLight*> &lights, vector<CMaterial*> &materials)
 {
 	// Файл модели
 	ifstream ModelF(FileName, ios::in|ios::binary);
@@ -204,7 +344,7 @@ bool Load3DSFile(const char *FileName, vector<C3DSObject*> &objects, vector<CCam
 		ModelF.seekg(0);
 		while(ModelF.good())
 		{
-			ReadChunk(ModelF, objects, cameras, lights);
+			ReadChunk(ModelF, objects, cameras, lights, materials);
 		}
 		ModelF.close();
 		return true;

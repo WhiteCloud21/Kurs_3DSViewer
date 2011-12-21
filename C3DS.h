@@ -14,6 +14,7 @@ private:
 	vector<C3DSObject*> objects;
 	vector<CCamera*> cameras;
 	vector<CLight*> lights;
+	vector<CMaterial*> materials;
 	int cameraIndex;
 	int lightIndex;
 public:

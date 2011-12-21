@@ -3,14 +3,15 @@
 #include "C3DSObject.h"
 #include "Camera.h"
 #include "Light.h"
+#include "Material.h"
+#include "VBOInfo.h"
 #include <fstream>
 
 using namespace glm;
 
-char objectName[256];
+char* objectName;
 bool meshFirst;
 vec3 color;
-ivec3 colorByte;
-bool isColor24Bit;
+float percent;
 bool isSpotLight;
 bool isLightEnabled;

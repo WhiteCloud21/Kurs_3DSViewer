@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <algorithm>
 #include "macro.h"
 
@@ -28,6 +29,7 @@ extern bool CullFaceFlag;
 extern string ProgPath;
 extern string ConfigFile;
 extern string LogFile;
+extern string LogFile;
 
 extern int windowWidth, windowHeight;
 
@@ -36,12 +38,11 @@ extern void split(const string& str, const string& delim, vector<string>& parts)
 extern string remove_spaces(const string& source);
 extern string StrToLower(string s);
 extern inline string StrReplace(string text, string s, string d);
-extern void WriteLog(char *text);
 extern bool FileExists (const char *fname);
 extern string getNowToString();
 
 extern void ChangeTextureFilter();
-extern void LoadObjects();
+extern void LoadObjects(char* filename);
 extern void RenderObjects();
 
 extern bool LoadTGA(Texture * texture, char * filename);

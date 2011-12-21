@@ -1,7 +1,7 @@
 #include "C3DS.h"
 
 // загрузка файла 3ds
-extern bool Load3DSFile(const char *FileName, vector<C3DSObject*> &objects, vector<CCamera*> &cameras, vector<CLight*> &lights);
+extern bool Load3DSFile(const char *FileName, vector<C3DSObject*> &objects, vector<CCamera*> &cameras, vector<CLight*> &lights, vector<CMaterial*> &materials);
 
 // установка режима фильтрации
 void C3DS::SetFilterMode(char mode)
@@ -51,7 +51,7 @@ bool C3DS::Load(const char *FileName, Shader* shader)
 	WriteLogF("Loading scene \"%s\"...", FileName);
 
 	// Файл существует
-	if (Load3DSFile(FileName, objects, cameras, lights)!=NULL)
+	if (Load3DSFile(FileName, objects, cameras, lights, materials)!=NULL)
 	{
 		if (cameras.size() == 0)
 		{
@@ -164,7 +164,13 @@ C3DS::~C3DS(void)
 		delete objects[i];
 	for (uint i = 0; i < cameras.size(); i++)
 		delete cameras[i];
+	for (uint i = 0; i < lights.size(); i++)
+		delete lights[i];
+	for (uint i = 0; i < materials.size(); i++)
+		delete materials[i];
 
 	objects.clear();
 	cameras.clear();
+	lights.clear();
+	materials.clear();
 }

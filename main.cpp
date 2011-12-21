@@ -184,11 +184,11 @@ void main (int argc,char **argv)
 	// проверка потдержки VBO
 	if (GLEE_ARB_vertex_buffer_object)
 	{
-		WriteLog("supporting VBO ......OK");
+		WriteLogF("supporting VBO ......OK");
 	}
 	else
 	{
-		WriteLog("supporting VBO ......fail");
+		WriteLogF("supporting VBO ......fail");
 		printf("Press any key...");
 		_getch();
 		exit(1);
@@ -197,18 +197,21 @@ void main (int argc,char **argv)
 	// Проверка поддержки шейдеров
 	if (GLEE_ARB_shader_objects && GLEE_ARB_fragment_shader && GLEE_ARB_vertex_shader)
 	{
-		WriteLog("supporting shaders ......OK");
+		WriteLogF("supporting shaders ......OK");
 	}
 	else
 	{
-		WriteLog("supporting shaders ......fail");
+		WriteLogF("supporting shaders ......fail");
 		printf("Press any key...");
 		_getch();
 		exit(1);
 	}
 
 	// загрузка объектов
-	LoadObjects();
+	if (argc>1)
+		LoadObjects(argv[1]);
+	else
+		LoadObjects("scene.3ds");
 
 	printf("\n");
 	camera = scene.GetCurrentCamera();

@@ -26,11 +26,11 @@ void ChangeTextureFilter()
 }
 
 // Загрузка объектов.
-void LoadObjects()
+void LoadObjects(char* filename)
 {
 	TextureFilter = TEXTURE_FILTER_NEAREST;
 
-	scene.Load((ProgPath+"Models\\scene2.3ds").c_str(), &ModelShader);
+	scene.Load((ProgPath+"Models\\"+string(filename)).c_str(), &ModelShader);
 
 	// Загрузка шейдеров
 	ModelShader.LoadShader("Phong");

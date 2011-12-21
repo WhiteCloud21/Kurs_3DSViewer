@@ -24,8 +24,6 @@ public:
 	void SetTarget(vec3);
 	// Установка цвета
 	void SetColor(vec3);
-	// Установка цвета
-	void SetColor(ivec3);
 	void ApplyLight(void);
 };
 #endif

@@ -57,16 +57,6 @@ void CLight::SetColor(vec3 color)
 	this->CalculateDirectColor();
 }
 
-// Установка цвета
-void CLight::SetColor(ivec3 color)
-{
-	this->color[0] = color.r / 255.0;
-	this->color[1] = color.g / 255.0;
-	this->color[2] = color.b / 255.0;
-	this->color[3] = 1;
-	this->CalculateDirectColor();
-}
-
 // Применение источника света
 void CLight::ApplyLight(void)
 {

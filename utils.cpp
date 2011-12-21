@@ -97,24 +97,6 @@ string getNowToString()
 
   return _retStr;
 }
-
-void WriteLog(char *text)
-{
-	string _outText(text);
-	_outText = getNowTimeStamp() + _outText + "\n";
-	cout << _outText;
-	try
-	{
-		ofstream _logFile(LogFile.c_str(), ios::app);
-		_logFile << _outText;
-		_logFile.close();
-	}
-	catch (exception)
-	{
-		cout << "Ошибка записи в лог-файл";
-	}
-}
-
 bool FileExists (const char *fname)
 {
 	return _access(fname,0) != -1;
