@@ -10,7 +10,6 @@ private:
 	string filename;
 	void clearTexture();
 public:
-	int sampler;
 	GLushort options;
 	void SetFileName(string);
 	Texture* GetTexture();

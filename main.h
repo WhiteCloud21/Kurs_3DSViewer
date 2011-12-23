@@ -28,17 +28,12 @@ extern bool UseOcclusionCulling;
 extern bool CullFaceFlag;
 
 extern string ProgPath;
-extern string ConfigFile;
 extern string LogFile;
-extern string LogFile;
+extern unsigned int occludedCount;
 
 extern int windowWidth, windowHeight;
 
 // Функции
-extern void split(const string& str, const string& delim, vector<string>& parts);
-extern string remove_spaces(const string& source);
-extern string StrToLower(string s);
-extern inline string StrReplace(string text, string s, string d);
 extern bool FileExists (const char *fname);
 extern string getNowToString();
 

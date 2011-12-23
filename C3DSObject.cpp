@@ -6,65 +6,6 @@ void C3DSObject::SetName(char* name)
 	this->name = string(name);
 }
 
-void C3DSObject::ClearTexture()
-{
-	texture.imageData=NULL;
-}
-
-// установка текстуры
-void C3DSObject::SetTexture(string FileName)
-{
-	ClearTexture();
-	WriteLogF("Loading texture \"%s\"...", FileName.c_str());
-	glActiveTexture(GL_TEXTURE0);
-	glGenTextures(1,(GLuint *)&texture.texID);
-	glBindTexture(GL_TEXTURE_2D,texture.texID);
-
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D,GL_GENERATE_MIPMAP,GL_TRUE);
-
-	string FullFileNameStr =ProgPath+"Textures\\"+FileName; 
-	char *FullFileName=const_cast<char*>(FullFileNameStr.c_str());
-
-	if (LoadTGA(&texture,FullFileName))
-	{
-		glPixelStorei(GL_UNPACK_ALIGNMENT,1);
-		glTexImage2D (GL_TEXTURE_2D,0,GL_RGB,texture.width,texture.height,
-			0,texture.type,GL_UNSIGNED_BYTE,texture.imageData);
-		WriteLogF("  Loading succesfull\n");
-	}
-	else
-		texture.imageData = NULL;
-}
-
-// установка режима фильтрации
-void C3DSObject::SetFilterMode(char mode)
-{
-	glBindTexture(GL_TEXTURE_2D,texture.texID);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1);
-	switch (mode)
-	{
-		case TEXTURE_FILTER_NEAREST:
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			break;
-		case TEXTURE_FILTER_LINEAR:
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			break;
-		case TEXTURE_FILTER_MIPMAP_LINEAR:
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			break;
-		case TEXTURE_FILTER_ANISOTROPY:
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 8);
-			break;
-	}
-}
-
 // вывод на экран
 void C3DSObject::Render(void)
 {	
@@ -99,13 +40,13 @@ void C3DSObject::Render(void)
 C3DSObject::C3DSObject()
 {
 	Buffer=0;
-	texture.imageData = NULL;
 	VertexList = NULL;
 	IndexList = NULL;
 	TexVertList = NULL;
 	VertexCount = 0;
 	IndexCount = 0;
 	wasDrawn = true;
+	isTransparent = false;
 }
 
 C3DSObject::~C3DSObject(void)

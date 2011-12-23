@@ -18,6 +18,7 @@ private:
 	vector<CMaterial*> materials;
 	int cameraIndex;
 	int lightIndex;
+	GLuint* queries;
 public:
 	Shader* shader;
 	void SetFilterMode(char);
@@ -31,6 +32,8 @@ public:
 	CLight* GetNextLight();
 	// загрузка файла 3ds
 	bool Load (const char *FileName, Shader*);
+	// сортирует объекты
+	void SortObjects(void);
 	// вывод объекта на экран
 	void Render (void);
 	C3DS();

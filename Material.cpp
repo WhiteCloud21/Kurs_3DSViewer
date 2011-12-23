@@ -75,6 +75,41 @@ void CMaterial::SetTransparency(float transparency)
 	this->emission[3] = 1.0 - transparency / 100;
 }
 
+bool CMaterial::IsTransparent()
+{
+	return transparency > 5.0;
+}
+
+// установка режима фильтрации
+void CMaterial::SetFilterMode(char mode)
+{
+	if (texture1.texture.imageData != NULL)
+	{
+		glBindTexture(GL_TEXTURE_2D,texture1.texture.texID);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1);
+		switch (mode)
+		{
+			case TEXTURE_FILTER_NEAREST:
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+				break;
+			case TEXTURE_FILTER_LINEAR:
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				break;
+			case TEXTURE_FILTER_MIPMAP_LINEAR:
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				break;
+			case TEXTURE_FILTER_ANISOTROPY:
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 8);
+				break;
+		}
+	}
+}
+
 void CMaterial::Apply(void* texCoordPtr)
 {
 	GLfloat shininess=32.0;

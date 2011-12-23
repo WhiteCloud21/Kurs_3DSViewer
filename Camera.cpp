@@ -1,6 +1,9 @@
 #include <windows.h>
 #include <fstream>
 #include "Camera.h"
+#include "C3DS.h"
+
+extern C3DS scene;
 
 //  онструктор по умолчанию
 CCamera::CCamera(void)
@@ -74,6 +77,12 @@ void CCamera::Recalc(void)
 	matrix[11]=0;
 	matrix[15]=1;
 
+	// установить матрицу проекции с правильным аспектом
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(25.0,((float)windowWidth)/windowHeight,1.0,sqrt(position.x * position.x + position.y * position.y + position.z * position.z)*2);
+
+	scene.SortObjects();
 }
 
 // ѕересчет матрицы камеры и ее применение

@@ -8,7 +8,6 @@
 
 extern C3DS scene;
 CCamera* camera;
-bool UseOcclusionCulling;
 
 inline string GetPathFromFilename( const string& filename )
 {
@@ -32,10 +31,11 @@ void Display (void)
 {
 	// очищаем буфер цвета и буфер глубины
 	glClearColor(0.3,0.3,0.3,1.0);
+	glClearDepth(1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
-	glEnable (GL_BLEND); 
+	glEnable(GL_BLEND); 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	// режим вывода полигонов (выводим в виде линии)
@@ -127,8 +127,9 @@ void KeyPressed(unsigned char c, int, int)
 		case VK_L:
 			ToggleCullFace();
 			break;	
-		case VK_M:
+		case VK_O:
 			UseOcclusionCulling = !UseOcclusionCulling && GLEE_ARB_occlusion_query;
+			WriteLogF("Occlusion culling: %s", UseOcclusionCulling?"Enabled":"Disabled");
 			break;
 		case VK_T:
 			ChangeTextureFilter();
@@ -136,12 +137,11 @@ void KeyPressed(unsigned char c, int, int)
 	}
 }
 
-void main (int argc,char **argv)
+void main(int argc,char **argv)
 {
 	setlocale(LC_CTYPE, "RUS");
 
 	ProgPath = GetPathFromFilename(argv[0]);
-	ConfigFile = ProgPath + "config.cfg";
 	LogFile = ProgPath + "Logs\\" + getNowToString() + ".log";
 	if (!FileExists((ProgPath + "Logs").c_str()))
 	{
@@ -168,7 +168,6 @@ void main (int argc,char **argv)
 	glutKeyboardFunc(KeyPressed);
 	// 7. устанавливаем функцию которая вызывается всякий раз, когда процессор простаивает
 	glutIdleFunc(Simulation);
-	
 
 	// вывод строк описывающих OpenGL
 	// вывод производителя
@@ -238,8 +237,6 @@ void main (int argc,char **argv)
 	printf("\n");
 	camera = scene.GetCurrentCamera();
 	UseOcclusionCulling = GLEE_ARB_occlusion_query;
-
-	WriteLogF("%u", sizeof(GLsizei));
 	
 	// основной цикл обработки сообщений ОС
 	glutMainLoop();

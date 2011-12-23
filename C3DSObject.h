@@ -13,12 +13,11 @@ using namespace glm;
 class C3DSObject
 {
 	friend class C3DS;
+	friend bool ObjectsComparer(C3DSObject *obj1, C3DSObject *obj2);
 	friend void ReadChunk(ifstream &, C3DS*);
 private:
 	// имя объекта
 	string name;
-	// текстура
-	Texture texture;
 	// индексы буферов ARB
 	GLuint Buffer;
 	// количество текст. координат
@@ -33,30 +32,22 @@ private:
 	unsigned short VertexCount;
 	// список вершин
 	GLfloat *VertexList;
-	// буфер VBO для вершин
-	GLuint VertexVBO;
-	// буфер VBO для индексов
+	// буферы VBO для индексов
 	vector<CVBOInfo> IndexVBO;
 	// локальная матрица
 	GLfloat LocalMatrix[12];
-	// шейдер
-	//Shader *shader;
 	// Occluder
 	COccluder* occluder;
 	// Был ли отрисован на последнем кадре
 	bool wasDrawn;
+	// Прозрачный ли
+	bool isTransparent;
 	// конструктор
 	C3DSObject();
 	~C3DSObject(void);
 public:
 	// установка имени
 	void SetName(char* name);
-	// установка режима фильтрации
-	void SetFilterMode(char);
-	// очистка текстуры
-	void ClearTexture();
-	// установка текстуры
-	void SetTexture(string);
 	// вывод объекта на экран
 	void Render (void);
 };

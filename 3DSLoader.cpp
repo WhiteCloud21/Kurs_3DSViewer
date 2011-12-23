@@ -299,6 +299,8 @@ void ReadChunk(ifstream &ModelF, C3DS* scene)
 					glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof(GLuint)*3*_tempShort, _shArr, GL_STATIC_DRAW_ARB);
 					glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 					currentObject->IndexVBO.push_back(CVBOInfo(_tempUint, 3*_tempShort, *_it));
+					if ((*_it)->IsTransparent())
+						currentObject->isTransparent = true;
 					WriteLogF("      Created buffer %u", _tempUint);
 					delete[] _shArr;
 					break;

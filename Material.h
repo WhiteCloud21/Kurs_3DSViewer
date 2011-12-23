@@ -31,6 +31,9 @@ public:
 	void SetShininessStrength(float shininessStrength);
 	void SetSelfIllum(float selfIllum);
 	void SetTransparency(float transparency);
+	bool IsTransparent();
+	// установка режима фильтрации
+	void SetFilterMode(char);
 	void Apply(void*);
 };
 #endif

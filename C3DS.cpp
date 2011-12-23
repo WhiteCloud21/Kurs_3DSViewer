@@ -1,6 +1,8 @@
 #include "C3DS.h"
 #include "Occluder.h"
 
+extern C3DS scene;
+
 extern GLuint occluderBufferVBOIndex;
 // загрузка файла 3ds
 extern bool Load3DSFile(const char *FileName, C3DS* scene);
@@ -8,8 +10,8 @@ extern bool Load3DSFile(const char *FileName, C3DS* scene);
 // установка режима фильтрации
 void C3DS::SetFilterMode(char mode)
 {
-	for (uint i = 0; i < objects.size(); i++)
-		objects[i]->SetFilterMode(mode);
+	for (uint i = 0; i < materials.size(); i++)
+		materials[i]->SetFilterMode(mode);
 }
 
 // Получение текущей камеры
@@ -21,6 +23,7 @@ CCamera* C3DS::GetCurrentCamera()
 // Получение следующей камеры
 CCamera* C3DS::GetNextCamera()
 {
+	SortObjects();
 	return cameras[(++cameraIndex)%cameras.size()];
 }
 
@@ -156,6 +159,8 @@ bool C3DS::Load(const char *FileName, Shader* shader)
 		}
 		UseDestructors=true;
 		_retBool = true;
+		queries = new GLuint[objects.size()];
+		SortObjects();
 	}
 	else
 	{
@@ -165,41 +170,82 @@ bool C3DS::Load(const char *FileName, Shader* shader)
 	return _retBool;
 }
 
+// сортировка объектов
+void C3DS::SortObjects(void)
+{
+	if (UseDestructors)
+	{
+		UseDestructors=false;
+		if (objects.size() > 1)
+			sort(objects.begin(), objects.end(), ObjectsComparer);
+		UseDestructors=true;
+	}
+}
+
 // вывод на экран
 void C3DS::Render(void)
 {
-	uint N = objects.size();
-	GLuint* queries = new GLuint[N];
+	occludedCount = 0;
+	GLuint sampleCount;
 
-	glGenQueriesARB(N, queries);
-	for (uint i = 0; i < objects.size(); i++)
+	GLuint N = objects.size();
+
+	if (UseOcclusionCulling)
 	{
-		C3DSObject* _obj = objects[i];
-		glBeginQueryARB(GL_SAMPLES_PASSED_ARB, queries[i]);
-		if (_obj->wasDrawn)
+		// Проверка результатов предыдущего кадра
+		for (uint i = 0; i < N; i++)
 		{
-			_obj->Render();
+			C3DSObject* _obj = objects[i];
+
+			glGetQueryObjectuivARB(queries[i], GL_QUERY_RESULT_ARB, &sampleCount);
+			if (sampleCount == 0)
+			{
+				occludedCount++;
+				_obj->wasDrawn = false;
+			}
+			else
+			{
+				_obj->wasDrawn = true;
+			}
 		}
-		else
+
+		glGenQueriesARB(N, queries);
+		for (uint i = 0; i < N; i++)
 		{
-			_obj->occluder->Render();
+			C3DSObject* _obj = objects[i];
+
+			glBeginQueryARB(GL_SAMPLES_PASSED_ARB, queries[i]);
+			if (_obj->wasDrawn)
+			{
+				_obj->Render();
+			}
+			else
+			{
+				_obj->occluder->Render();
+			}
+			glEndQueryARB(GL_SAMPLES_PASSED_ARB);
 		}
-		glEndQueryARB(GL_SAMPLES_PASSED_ARB);
 	}
-	delete[] queries;
+	// Без OC
+	else
+	{
+		for (uint i = 0; i < N; i++)
+		{
+			objects[i]->Render();
+		}
+	}
 }
 
 C3DS::C3DS()
 {
-	GLushort _indicies[24] = {0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 5, 4, 3, 2, 6, 7, 1, 5, 6, 2, 0, 4, 7, 3};
-	glGenBuffersARB(1, &occluderBufferVBOIndex);
-	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, occluderBufferVBOIndex);
-	glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof(GLushort)*24,_indicies,GL_STATIC_DRAW_ARB);
-	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+	queries = NULL;
 }
 
 C3DS::~C3DS(void)
 {
+	if (queries != NULL)
+		delete[] queries;
+
 	glDeleteBuffersARB(1, &occluderBufferVBOIndex);
 
 	for (uint i = 0; i < objects.size(); i++)
@@ -215,4 +261,25 @@ C3DS::~C3DS(void)
 	cameras.clear();
 	lights.clear();
 	materials.clear();
+}
+
+bool ObjectsComparer(C3DSObject *obj1, C3DSObject *obj2)
+{
+	if (obj1->isTransparent && obj2->isTransparent)
+	{
+		float _len1 = length(obj1->occluder->center - scene.GetCurrentCamera()->GetPos());
+		float _len2 = length(obj2->occluder->center - scene.GetCurrentCamera()->GetPos());
+		return (_len1 < _len2);
+	}
+	else if (!obj1->isTransparent && !obj2->isTransparent)
+	{
+		float _len1 = length(obj1->occluder->center - scene.GetCurrentCamera()->GetPos());
+		float _len2 = length(obj2->occluder->center - scene.GetCurrentCamera()->GetPos());
+		return (_len1 > _len2);
+	}
+	else if (obj1->isTransparent)
+	{
+		return false;
+	}
+	return true;
 }

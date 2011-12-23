@@ -1,7 +1,7 @@
 #include "main.h"
 
 int frameCount, oldTime;
-char outBuf[5];
+char _outBuf[30];
 
 // посимвольная отрисовка строки
 void renderBitmapString(float x, float y, void *font, char *string)
@@ -20,8 +20,8 @@ void DrawFps()
 	frameCount++;
 	int _time=glutGet(GLUT_ELAPSED_TIME);
 	if (_time - oldTime > 1000) {
-		sprintf_s(outBuf,"%3d",
-			(int)(frameCount*1000.0/(_time-oldTime)));
+		sprintf_s(_outBuf,"%8d %10u OC",
+			(int)(frameCount*1000.0/(_time-oldTime)), occludedCount);
 		oldTime = _time;
 		frameCount = 0;
 	}
@@ -43,7 +43,7 @@ void DrawFps()
 
 	// отрисовка строки
 	glColor3f(1, 1, 1);
-	renderBitmapString(10, 20, GLUT_BITMAP_HELVETICA_18, outBuf);
+	renderBitmapString(10, 20, GLUT_BITMAP_HELVETICA_18, _outBuf);
 	// восстановление MVM
 	glPopMatrix();
 	

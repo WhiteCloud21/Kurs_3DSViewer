@@ -21,11 +21,18 @@ void CTextureMap::clearTexture()
 
 void CTextureMap::SetFileName(string filename)
 {
-	string _str = filename.substr(filename.length() - 4, 4);
-	std::transform(_str.begin(), _str.end(), _str.begin(), ::toupper);
-	size_t _index = filename.find_last_of('.');
-	this->filename = filename;
-	this->filename = this->filename.substr(0, _index) + ".TGA";
+	if (filename.length() > 4)
+	{
+		string _str = filename.substr(filename.length() - 4, 4);
+		std::transform(_str.begin(), _str.end(), _str.begin(), ::toupper);
+		size_t _index = filename.find_last_of('.');
+		this->filename = filename;
+		this->filename = this->filename.substr(0, _index) + ".TGA";
+	}
+	else
+	{
+		this->filename = filename;
+	}
 
 	clearTexture();
 	WriteLogF("Loading texture \"%s\"...", this->filename.c_str());
