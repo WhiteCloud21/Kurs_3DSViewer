@@ -105,6 +105,7 @@ C3DSObject::C3DSObject()
 	TexVertList = NULL;
 	VertexCount = 0;
 	IndexCount = 0;
+	wasDrawn = true;
 }
 
 C3DSObject::~C3DSObject(void)
@@ -119,5 +120,6 @@ C3DSObject::~C3DSObject(void)
 		delete[] IndexList;
 		delete[] VertexList;
 		delete[] TexVertList;
+		delete occluder;
 	}
 }

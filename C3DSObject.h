@@ -5,6 +5,7 @@
 #include "Light.h"
 #include "Material.h"
 #include "VBOInfo.h"
+#include "Occluder.h"
 #include <fstream>
 
 using namespace glm;
@@ -40,6 +41,10 @@ private:
 	GLfloat LocalMatrix[12];
 	// шейдер
 	//Shader *shader;
+	// Occluder
+	COccluder* occluder;
+	// Был ли отрисован на последнем кадре
+	bool wasDrawn;
 	// конструктор
 	C3DSObject();
 	~C3DSObject(void);

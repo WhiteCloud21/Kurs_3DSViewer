@@ -93,12 +93,25 @@ bool C3DS::Load(const char *FileName, Shader* shader)
 			//		currentObject->VertexList[3*i+1]=currentObject->LocalMatrix[6]*x+currentObject->LocalMatrix[8]*z+currentObject->LocalMatrix[7]*y;
 			//}
 
+			GLfloat _min[3], _max[3];
+			for (int i = 0; i < 3; ++i)
+			{
+				_min[0] = 1E+37;
+				_max[0] = -1E+37;
+			}
+
 			// дублирование вершин
 			GLfloat *VertexListCopy=new GLfloat[currentObject->IndexCount*4*2];//+нормали+текстурные координаты
-			for(int i=0;i<currentObject->IndexCount;++i)
+			for(unsigned int i=0;i<currentObject->IndexCount;++i)
 			{
 				for(int k=0;k<3;++k)	
+				{
 					VertexListCopy[3*i+k]=currentObject->VertexList[3*currentObject->IndexList[i]+k];
+					if (_min[k] > VertexListCopy[3*i+k])
+						_min[k] = VertexListCopy[3*i+k];
+					else if (_max[k] < VertexListCopy[3*i+k])
+						_max[k] = VertexListCopy[3*i+k];
+				}
 				if (currentObject->TexVertList != NULL)
 				{
 					for(int k=0;k<2;++k)	
@@ -108,7 +121,7 @@ bool C3DS::Load(const char *FileName, Shader* shader)
 			}
 
 			// ¬ычисление нормалей
-			for(int i=0;i<currentObject->IndexCount/3;++i)
+			for(unsigned int i=0;i<currentObject->IndexCount/3;++i)
 			{
 				//A2A1
 				vec3 a1=vec3(VertexListCopy[3*(3*i+2)]-VertexListCopy[3*(3*i+1)], VertexListCopy[3*(3*i+2)+1]-VertexListCopy[3*(3*i+1)+1], VertexListCopy[3*(3*i+2)+2]-VertexListCopy[3*(3*i+1)+2]);
@@ -137,6 +150,7 @@ bool C3DS::Load(const char *FileName, Shader* shader)
 			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 
 			//printf("  Loading successful. Using buffers %u and %u\n", Buffers[0], Buffers[1]);
+			currentObject->occluder = new COccluder(_min, _max);
 			WriteLogF("  Object '%s': loading successful. Using buffer %u", currentObject->name.c_str(), currentObject->Buffer);
 			delete[] VertexListCopy;
 		}
@@ -154,8 +168,25 @@ bool C3DS::Load(const char *FileName, Shader* shader)
 // вывод на экран
 void C3DS::Render(void)
 {
+	uint N = objects.size();
+	GLuint* queries = new GLuint[N];
+
+	glGenQueriesARB(N, queries);
 	for (uint i = 0; i < objects.size(); i++)
-		objects[i]->Render();
+	{
+		C3DSObject* _obj = objects[i];
+		glBeginQueryARB(GL_SAMPLES_PASSED_ARB, queries[i]);
+		if (_obj->wasDrawn)
+		{
+			_obj->Render();
+		}
+		else
+		{
+			_obj->occluder->Render();
+		}
+		glEndQueryARB(GL_SAMPLES_PASSED_ARB);
+	}
+	delete[] queries;
 }
 
 C3DS::C3DS()
