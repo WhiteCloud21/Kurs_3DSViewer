@@ -24,6 +24,7 @@ const char TEXTURE_FILTER_ANISOTROPY = 3;
 const int MAX_CONFIG_LINE_LENGTH=500;
 
 extern bool UseDestructors;
+extern bool UseOcclusionCulling;
 extern bool CullFaceFlag;
 
 extern string ProgPath;

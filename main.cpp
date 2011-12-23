@@ -8,6 +8,7 @@
 
 extern C3DS scene;
 CCamera* camera;
+bool UseOcclusionCulling;
 
 inline string GetPathFromFilename( const string& filename )
 {
@@ -34,6 +35,9 @@ void Display (void)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
+	glEnable (GL_BLEND); 
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	// режим вывода полигонов (выводим в виде линии)
 	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 
@@ -58,7 +62,13 @@ void Reshape (int w,int h)
 	// установить матрицу проекции с правильным аспектом
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(25.0,((float)w)/h,1.0,1000.0);
+	if (camera != NULL)
+	{
+		vec3 _camPos = camera->GetPos();
+		gluPerspective(25.0,((float)w)/h,1.0,sqrt(_camPos.x * _camPos.x + _camPos.y * _camPos.y + _camPos.z * _camPos.z)*15);
+	}
+	else
+		gluPerspective(25.0,((float)w)/h,1.0,1000.0);
 
 	// принудительно перерисовать окно
 	glutPostRedisplay();
@@ -111,9 +121,15 @@ void KeyPressed(unsigned char c, int, int)
 		case VK_R:
 			camera->Reset();
 			break;	
+		case VK_TAB:
+			camera = scene.GetNextCamera();
+			break;	
 		case VK_L:
 			ToggleCullFace();
 			break;	
+		case VK_M:
+			UseOcclusionCulling = !UseOcclusionCulling && GLEE_ARB_occlusion_query;
+			break;
 		case VK_T:
 			ChangeTextureFilter();
 			break;
@@ -198,6 +214,12 @@ void main (int argc,char **argv)
 	if (GLEE_ARB_shader_objects && GLEE_ARB_fragment_shader && GLEE_ARB_vertex_shader)
 	{
 		WriteLogF("supporting shaders ......OK");
+		if (GLEE_ARB_occlusion_query)
+		{
+			WriteLogF("supporting occlusion query ......OK");
+		}
+		else
+			WriteLogF("supporting occlusion query ......fail");
 	}
 	else
 	{
@@ -215,6 +237,9 @@ void main (int argc,char **argv)
 
 	printf("\n");
 	camera = scene.GetCurrentCamera();
+	UseOcclusionCulling = GLEE_ARB_occlusion_query;
+
+	WriteLogF("%u", sizeof(GLsizei));
 	
 	// основной цикл обработки сообщений ОС
 	glutMainLoop();

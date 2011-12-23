@@ -12,16 +12,10 @@ using namespace glm;
 class C3DSObject
 {
 	friend class C3DS;
-	friend void ReadChunk(ifstream &, vector<C3DSObject*> &, vector<CCamera*> &, vector<CLight*> &, vector<CMaterial*> &);
+	friend void ReadChunk(ifstream &, C3DS*);
 private:
 	// имя объекта
 	string name;
-	// позиция объекта
-	vec3 position;
-	// цвет объекта
-	vec3 color;
-	// масштаб объекта
-	GLfloat scale;
 	// текстура
 	Texture texture;
 	// индексы буферов ARB
@@ -31,7 +25,7 @@ private:
 	// список текст. координат
 	GLfloat *TexVertList;
 	// количество индексов
-	unsigned short IndexCount;
+	unsigned int IndexCount;
 	// список индексов
 	unsigned short *IndexList;
 	// количество вершин
@@ -45,27 +39,19 @@ private:
 	// локальная матрица
 	GLfloat LocalMatrix[12];
 	// шейдер
-	Shader *shader;
+	//Shader *shader;
 	// конструктор
 	C3DSObject();
 	~C3DSObject(void);
 public:
 	// установка имени
 	void SetName(char* name);
-	// установка позиции
-	void SetPos(GLfloat x, GLfloat y, GLfloat z);
-	// установка цвета
-	void SetColor(GLfloat r, GLfloat g, GLfloat b);
-	// установка масштаба
-	void SetScale(GLfloat);
 	// установка режима фильтрации
 	void SetFilterMode(char);
 	// очистка текстуры
 	void ClearTexture();
 	// установка текстуры
 	void SetTexture(string);
-	//// загрузка файла 3ds и запись в буферы VBO
-	//bool Load (const char *FileName, Shader*);
 	// вывод объекта на экран
 	void Render (void);
 };

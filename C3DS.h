@@ -10,6 +10,7 @@ using namespace glm;
 
 class C3DS
 {
+	friend void ReadChunk(ifstream &, C3DS*);
 private:
 	vector<C3DSObject*> objects;
 	vector<CCamera*> cameras;
@@ -18,6 +19,7 @@ private:
 	int cameraIndex;
 	int lightIndex;
 public:
+	Shader* shader;
 	void SetFilterMode(char);
 	// Получение текущей камеры
 	CCamera* GetCurrentCamera();

@@ -1,7 +1,9 @@
 #include "C3DS.h"
+#include "Occluder.h"
 
+extern GLuint occluderBufferVBOIndex;
 // загрузка файла 3ds
-extern bool Load3DSFile(const char *FileName, vector<C3DSObject*> &objects, vector<CCamera*> &cameras, vector<CLight*> &lights, vector<CMaterial*> &materials);
+extern bool Load3DSFile(const char *FileName, C3DS* scene);
 
 // установка режима фильтрации
 void C3DS::SetFilterMode(char mode)
@@ -51,8 +53,9 @@ bool C3DS::Load(const char *FileName, Shader* shader)
 	WriteLogF("Loading scene \"%s\"...", FileName);
 
 	// Файл существует
-	if (Load3DSFile(FileName, objects, cameras, lights, materials)!=NULL)
+	if (Load3DSFile(FileName, this)!=NULL)
 	{
+		this->shader = shader;
 		if (cameras.size() == 0)
 		{
 			cameras.push_back(new CCamera());
@@ -96,9 +99,12 @@ bool C3DS::Load(const char *FileName, Shader* shader)
 			{
 				for(int k=0;k<3;++k)	
 					VertexListCopy[3*i+k]=currentObject->VertexList[3*currentObject->IndexList[i]+k];
-				for(int k=0;k<2;++k)	
-					// добавление текстурных координат
-					VertexListCopy[currentObject->IndexCount*3*2+2*i+k]=currentObject->TexVertList[2*currentObject->IndexList[i]+k];
+				if (currentObject->TexVertList != NULL)
+				{
+					for(int k=0;k<2;++k)	
+						// добавление текстурных координат
+						VertexListCopy[currentObject->IndexCount*3*2+2*i+k]=currentObject->TexVertList[2*currentObject->IndexList[i]+k];
+				}
 			}
 
 			// Вычисление нормалей
@@ -131,9 +137,8 @@ bool C3DS::Load(const char *FileName, Shader* shader)
 			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 
 			//printf("  Loading successful. Using buffers %u and %u\n", Buffers[0], Buffers[1]);
-			WriteLogF("  Loading successful. Using buffer %u\n", currentObject->Buffer);
+			WriteLogF("  Object '%s': loading successful. Using buffer %u", currentObject->name.c_str(), currentObject->Buffer);
 			delete[] VertexListCopy;
-			currentObject->shader=shader;
 		}
 		UseDestructors=true;
 		_retBool = true;
@@ -155,11 +160,17 @@ void C3DS::Render(void)
 
 C3DS::C3DS()
 {
-
+	GLushort _indicies[24] = {0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 5, 4, 3, 2, 6, 7, 1, 5, 6, 2, 0, 4, 7, 3};
+	glGenBuffersARB(1, &occluderBufferVBOIndex);
+	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, occluderBufferVBOIndex);
+	glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof(GLushort)*24,_indicies,GL_STATIC_DRAW_ARB);
+	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 }
 
 C3DS::~C3DS(void)
 {
+	glDeleteBuffersARB(1, &occluderBufferVBOIndex);
+
 	for (uint i = 0; i < objects.size(); i++)
 		delete objects[i];
 	for (uint i = 0; i < cameras.size(); i++)

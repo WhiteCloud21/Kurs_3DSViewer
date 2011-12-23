@@ -206,7 +206,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Occluder.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Shader.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TextureMap.cpp"
 				>
 			</File>
 			<File
@@ -244,10 +252,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\data.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Light.h"
 				>
 			</File>
@@ -264,11 +268,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Occluder.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Shader.h"
 				>
 			</File>
 			<File
 				RelativePath=".\texture.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TextureMap.h"
 				>
 			</File>
 			<File

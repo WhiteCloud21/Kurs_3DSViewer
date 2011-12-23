@@ -2,6 +2,7 @@
 #define __Material_h__
 
 #include "main.h"
+#include "TextureMap.h"
 
 using namespace glm;
 
@@ -12,10 +13,13 @@ private:
 	GLfloat ambient[4];
 	GLfloat diffuse[4];
 	GLfloat specular[4];
+	GLfloat emission[4];
 	GLfloat shininess;
 	GLfloat shininessStrength;
 	GLfloat selfIllum;
+	GLfloat transparency;
 public:
+	CTextureMap texture1;
 	CMaterial();
 	~CMaterial();
 	const char* GetName();
@@ -26,6 +30,7 @@ public:
 	void SetShininess(float shininess);
 	void SetShininessStrength(float shininessStrength);
 	void SetSelfIllum(float selfIllum);
-	void Apply();
+	void SetTransparency(float transparency);
+	void Apply(void*);
 };
 #endif

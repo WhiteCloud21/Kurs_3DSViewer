@@ -21,6 +21,7 @@ public:
 	CCamera(void);
 	CCamera(GLfloat, GLfloat, GLfloat, GLfloat, GLfloat, GLfloat);
 	~CCamera(void);
+	vec3 GetPos();
 	void Reset(void);
 	void Recalc(void);
 	void ApplyCamera(void);

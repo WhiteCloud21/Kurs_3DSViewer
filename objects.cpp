@@ -28,9 +28,16 @@ void ChangeTextureFilter()
 // Загрузка объектов.
 void LoadObjects(char* filename)
 {
+	string _fnf = ProgPath+"Models\\"+string(filename);
+	if (!FileExists(_fnf.c_str()))
+	{
+		WriteLogF("Scene file does not exists, exiting...");
+		exit(1);
+	}
 	TextureFilter = TEXTURE_FILTER_NEAREST;
 
-	scene.Load((ProgPath+"Models\\"+string(filename)).c_str(), &ModelShader);
+	// Загрузка сцены
+	scene.Load(_fnf.c_str(), &ModelShader);
 
 	// Загрузка шейдеров
 	ModelShader.LoadShader("Phong");

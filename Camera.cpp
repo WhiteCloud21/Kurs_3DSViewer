@@ -23,6 +23,12 @@ CCamera::CCamera(GLfloat x, GLfloat y, GLfloat z, GLfloat lx, GLfloat ly, GLfloa
 	Reset();
 }
 
+// Получение позиции
+vec3 CCamera::GetPos()
+{
+	return position;
+}
+
 // Сброс камеры
 void CCamera::Reset(void)
 {
@@ -93,9 +99,10 @@ void CCamera::ApplyCamera(void)
 // Перемещение камеры вперед
 void CCamera::Forward(void)
 {
-	if (length(ViewPoint - position)>4)
+	double r=length(ViewPoint - position);
+	if (r>4)
 	{
-		position=position+forward;
+		position=position+forward*r/20;
 	}
 	Recalc();
 }
@@ -103,9 +110,10 @@ void CCamera::Forward(void)
 // Перемещение камеры назад
 void CCamera::Back(void)
 {
-	//if (length(ViewPoint - position)<60)
+	double r=length(ViewPoint - position);
+	//if (r<60)
 	{
-		position=position-forward;
+		position=position-forward*r/20;
 	}
 	Recalc();
 }
@@ -130,7 +138,7 @@ void CCamera::Right(void)
 void CCamera::Up(void)
 {
 	double r=length(ViewPoint - position);
-	if (asin(position.y/r)<1.4)
+	if (asin((position.y - ViewPoint.y)/r)<1.4)
 	{
 		position=position+(up+forward*(sqrt(r*r+1)-r))*r/20;
 	}
@@ -141,7 +149,7 @@ void CCamera::Up(void)
 void CCamera::Down(void)
 {
 	double r=length(ViewPoint - position);
-	if (asin(position.y/r)>0.1)
+	if (asin((position.y - ViewPoint.y)/r)>-1.4)
 	{
 		position=position+(-up+forward*(sqrt(r*r+1)-r))*r/20;
 	}
