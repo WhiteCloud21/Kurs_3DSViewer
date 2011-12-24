@@ -9,3 +9,5 @@ string LogFile;
 int windowWidth, windowHeight;
 bool UseOcclusionCulling;
 unsigned int occludedCount;
+int getQTime;
+int frameSkipQuery;

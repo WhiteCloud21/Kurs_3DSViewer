@@ -99,8 +99,8 @@ bool C3DS::Load(const char *FileName, Shader* shader)
 			GLfloat _min[3], _max[3];
 			for (int i = 0; i < 3; ++i)
 			{
-				_min[0] = 1E+37;
-				_max[0] = -1E+37;
+				_min[i] = 1E+37;
+				_max[i] = -1E+37;
 			}
 
 			// дублирование вершин
@@ -180,50 +180,82 @@ void C3DS::SortObjects(void)
 			sort(objects.begin(), objects.end(), ObjectsComparer);
 		UseDestructors=true;
 	}
+	frameSkipQuery = 0;
 }
 
 // вывод на экран
 void C3DS::Render(void)
 {
-	occludedCount = 0;
+	static int _framesSkipped = 0;
 	GLuint sampleCount;
 
 	GLuint N = objects.size();
 
 	if (UseOcclusionCulling)
 	{
-		// Проверка результатов предыдущего кадра
-		for (uint i = 0; i < N; i++)
-		{
-			C3DSObject* _obj = objects[i];
 
-			glGetQueryObjectuivARB(queries[i], GL_QUERY_RESULT_ARB, &sampleCount);
-			if (sampleCount == 0)
+		if (frameSkipQuery <= _framesSkipped++)
+		{
+			occludedCount = 0;
+			_framesSkipped = 0;
+			// Проверка результатов предыдущего кадра
+			getQTime=glutGet(GLUT_ELAPSED_TIME);
+			for (uint i = 0; i < N; i++)
 			{
-				occludedCount++;
-				_obj->wasDrawn = false;
+				C3DSObject* _obj = objects[i];
+				glGetQueryObjectuivARB(queries[i], GL_QUERY_RESULT_ARB, &sampleCount);
+				if (sampleCount == 0)
+				{
+					occludedCount++;
+					_obj->wasDrawn = false;
+				}
+				else
+				{
+					_obj->wasDrawn = true;
+				}
 			}
-			else
+			getQTime = glutGet(GLUT_ELAPSED_TIME) - getQTime;
+			if (getQTime > frameSkipQuery)
 			{
-				_obj->wasDrawn = true;
+				if (getQTime < 5)
+					frameSkipQuery = getQTime;
 			}
 		}
-
-		glGenQueriesARB(N, queries);
-		for (uint i = 0; i < N; i++)
+		if (_framesSkipped == 0)
 		{
-			C3DSObject* _obj = objects[i];
+			glDeleteQueriesARB(N, queries);
+			glGenQueriesARB(N, queries);
+			for (uint i = 0; i < N; i++)
+			{
+				C3DSObject* _obj = objects[i];
 
-			glBeginQueryARB(GL_SAMPLES_PASSED_ARB, queries[i]);
-			if (_obj->wasDrawn)
-			{
-				_obj->Render();
+				glBeginQueryARB(GL_SAMPLES_PASSED_ARB, queries[i]);
+				if (_obj->wasDrawn)
+				{
+					_obj->Render();
+				}
+				else
+				{
+					_obj->occluder->Render();
+				}
+				glEndQueryARB(GL_SAMPLES_PASSED_ARB);
 			}
-			else
+		}
+		else
+		{
+			for (uint i = 0; i < N; i++)
 			{
-				_obj->occluder->Render();
+				C3DSObject* _obj = objects[i];
+
+				if (_obj->wasDrawn)
+				{
+					_obj->Render();
+				}
+				else
+				{
+					_obj->occluder->Render();
+				}
 			}
-			glEndQueryARB(GL_SAMPLES_PASSED_ARB);
 		}
 	}
 	// Без OC

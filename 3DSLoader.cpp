@@ -15,7 +15,6 @@ void ReadChunk(ifstream &ModelF, C3DS* scene)
 {
 	GLfloat _tempFloat;
 	GLubyte _tempByte;
-	GLint _tempInt;
 	GLuint _tempUint;
 	GLushort _tempShort, _tempShort2;
 	GLfloat _posX, _posY, _posZ, _tX, _tY, _tZ;
@@ -35,7 +34,6 @@ void ReadChunk(ifstream &ModelF, C3DS* scene)
 	char _tempChar;
 	char * _name = NULL;
 	int _len;
-	bool _flag;
 	// Читаем заголовок чанка
 	ModelF.read((char *)&chunk_id,sizeof(chunk_id));
 	ModelF.read((char *)&chunk_len,sizeof(chunk_len));

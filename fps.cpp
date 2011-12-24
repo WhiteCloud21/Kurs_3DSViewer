@@ -1,7 +1,7 @@
 #include "main.h"
 
 int frameCount, oldTime;
-char _outBuf[30];
+char _outBuf[50];
 
 // посимвольная отрисовка строки
 void renderBitmapString(float x, float y, void *font, char *string)
@@ -20,8 +20,8 @@ void DrawFps()
 	frameCount++;
 	int _time=glutGet(GLUT_ELAPSED_TIME);
 	if (_time - oldTime > 1000) {
-		sprintf_s(_outBuf,"%8d %10u OC",
-			(int)(frameCount*1000.0/(_time-oldTime)), occludedCount);
+		sprintf_s(_outBuf,"%8d %10u OC %6d getQTime",
+			(int)(frameCount*1000.0/(_time-oldTime)), occludedCount, getQTime);
 		oldTime = _time;
 		frameCount = 0;
 	}
