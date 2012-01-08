@@ -108,12 +108,38 @@ void CMaterial::SetFilterMode(char mode)
 				break;
 		}
 	}
+	if (textureSpecular.texture.imageData != NULL)
+	{
+		glBindTexture(GL_TEXTURE_2D,textureSpecular.texture.texID);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1);
+		switch (mode)
+		{
+			case TEXTURE_FILTER_NEAREST:
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+				break;
+			case TEXTURE_FILTER_LINEAR:
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				break;
+			case TEXTURE_FILTER_MIPMAP_LINEAR:
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				break;
+			case TEXTURE_FILTER_ANISOTROPY:
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 8);
+				break;
+		}
+	}
 }
 
 void CMaterial::Apply(void* texCoordPtr)
 {
 	GLfloat shininess=32.0;
 	bool _useTex1 = false;
+	bool _useTexSpec = false;
 
 	glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT, ambient);
 	glMaterialfv(GL_FRONT_AND_BACK,GL_DIFFUSE, diffuse);
@@ -126,9 +152,6 @@ void CMaterial::Apply(void* texCoordPtr)
 	if (_tex->imageData != NULL)
 	{
 		_useTex1 = true;
-
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
 		int _sampler = glGetUniformLocation(scene.shader->PShader, "tex1");
 
 		// Установка текущего ТБ
@@ -140,8 +163,32 @@ void CMaterial::Apply(void* texCoordPtr)
 
 		// Включение массива текстурных координат
 		glClientActiveTexture(GL_TEXTURE0);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glTexCoordPointer(2,GL_FLOAT,0, texCoordPtr);
+	}
+
+	
+	//данные текстуры
+	_tex = textureSpecular.GetTexture();
+	if (_tex->imageData != NULL)
+	{
+		_useTexSpec = true;
+
+		int _sampler = glGetUniformLocation(scene.shader->PShader, "texSpec");
+
+		// Установка текущего ТБ
+		glUniform1i(_sampler,1);
+
+		// Связывание ТБ с текстурой
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D,_tex->texID);
+
+		// Включение массива текстурных координат
+		glClientActiveTexture(GL_TEXTURE1);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glTexCoordPointer(2,GL_FLOAT,0, texCoordPtr);
 	}
 
 	glUniform1i(glGetUniformLocation(scene.shader->PShader, "useTex1"), _useTex1);
+	glUniform1i(glGetUniformLocation(scene.shader->PShader, "useTexSpec"), _useTexSpec);
 }

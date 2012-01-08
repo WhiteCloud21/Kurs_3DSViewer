@@ -20,6 +20,7 @@ private:
 	GLfloat transparency;
 public:
 	CTextureMap texture1;
+	CTextureMap textureSpecular;
 	CMaterial();
 	~CMaterial();
 	const char* GetName();

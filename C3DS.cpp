@@ -261,6 +261,8 @@ void C3DS::Render(void)
 	// Без OC
 	else
 	{
+		occludedCount = 0;
+		frameSkipQuery = 0;
 		for (uint i = 0; i < N; i++)
 		{
 			objects[i]->Render();
