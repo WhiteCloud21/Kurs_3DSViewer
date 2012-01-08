@@ -24,7 +24,8 @@ CCamera* C3DS::GetCurrentCamera()
 CCamera* C3DS::GetNextCamera()
 {
 	SortObjects();
-	return cameras[(++cameraIndex)%cameras.size()];
+	cameraIndex = (cameraIndex + 1)%cameras.size();
+	return cameras[cameraIndex];
 }
 
 // Получение текущего источника света
@@ -150,11 +151,10 @@ bool C3DS::Load(const char *FileName, Shader* shader)
 
 			// Устанавливаем текущие буферы VBO = 0
 			glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-			glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 
 			//printf("  Loading successful. Using buffers %u and %u\n", Buffers[0], Buffers[1]);
 			currentObject->occluder = new COccluder(_min, _max);
-			WriteLogF("  Object '%s': loading successful. Using buffer %u", currentObject->name.c_str(), currentObject->Buffer);
+			WriteLogF("  Object '%s' successfully loaded. VBO buffer: %u", currentObject->name.c_str(), currentObject->Buffer);
 			delete[] VertexListCopy;
 		}
 		UseDestructors=true;
@@ -199,7 +199,7 @@ void C3DS::Render(void)
 			occludedCount = 0;
 			_framesSkipped = 0;
 			// Проверка результатов предыдущего кадра
-			getQTime=glutGet(GLUT_ELAPSED_TIME);
+			int getQTime=glutGet(GLUT_ELAPSED_TIME);
 			for (uint i = 0; i < N; i++)
 			{
 				C3DSObject* _obj = objects[i];
@@ -217,8 +217,8 @@ void C3DS::Render(void)
 			getQTime = glutGet(GLUT_ELAPSED_TIME) - getQTime;
 			if (getQTime > frameSkipQuery)
 			{
-				if (getQTime < 5)
-					frameSkipQuery = getQTime;
+				//if (getQTime < 5)
+				frameSkipQuery = getQTime;
 			}
 		}
 		if (_framesSkipped == 0)

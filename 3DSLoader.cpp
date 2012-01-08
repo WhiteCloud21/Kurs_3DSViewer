@@ -37,7 +37,8 @@ void ReadChunk(ifstream &ModelF, C3DS* scene)
 	// Читаем заголовок чанка
 	ModelF.read((char *)&chunk_id,sizeof(chunk_id));
 	ModelF.read((char *)&chunk_len,sizeof(chunk_len));
-	WriteLogF("  Chunk ID = 0x%hX Length = %u",chunk_id,chunk_len);
+	if (isFullLog)
+		WriteLogF("  Chunk ID = 0x%hX Length = %u",chunk_id,chunk_len);
 	switch (chunk_id)
 	{
 	// Чанки, которые НЕ пропускаем
@@ -49,7 +50,8 @@ void ReadChunk(ifstream &ModelF, C3DS* scene)
 		color.g = _tempFloat;
 		ModelF.read((char *)&_tempFloat, sizeof(GLfloat));
 		color.b = _tempFloat;
-		WriteLogF("   Loaded color: (%f; %f; %f)", color.r, color.g, color.b);
+		if (isFullLog)
+			WriteLogF("   Loaded color: (%f; %f; %f)", color.r, color.g, color.b);
 		break;
 	case 0x0011: //RGB_COLOR_24BIT
 		// Загрузка цвета
@@ -59,13 +61,15 @@ void ReadChunk(ifstream &ModelF, C3DS* scene)
 		color.g = _tempByte / 255.0;
 		ModelF.read((char *)&_tempByte, sizeof(GLubyte));
 		color.b = _tempByte / 255.0;
-		WriteLogF("   Loaded color: (%f; %f; %f)", color.r, color.g, color.b);
+		if (isFullLog)
+			WriteLogF("   Loaded color: (%f; %f; %f)", color.r, color.g, color.b);
 		break;
 	case 0x0030: //PERCENT_INT
 		// Загрузка процента
 		ModelF.read((char *)&_tempShort, sizeof(GLshort));
 		percent = _tempShort;
-		WriteLogF("   Loaded percent: (%f)", percent);
+		if (isFullLog)
+			WriteLogF("   Loaded percent: (%f)", percent);
 		break;
 	case 0x4D4D: //MAIN3DS
 	case 0x3D3D: //EDIT3DS
@@ -73,7 +77,8 @@ void ReadChunk(ifstream &ModelF, C3DS* scene)
 	case 0xAFFF: //EDIT_MATERIAL
 		// Загрузка параметров материала
 		scene->materials.push_back(new CMaterial());
-		WriteLogF(" Loading material...");
+		if (isFullLog)
+			WriteLogF(" Loading material...");
 		temp_chunk_id = GetChunkId(ModelF);
 		while (temp_chunk_id >= 0xA000 && temp_chunk_id < 0xAFFF)
 		{
@@ -246,7 +251,8 @@ void ReadChunk(ifstream &ModelF, C3DS* scene)
 			ModelF.read((char *)&(currentObject->VertexList[3*i+1]),sizeof(GLfloat));
 			currentObject->VertexList[3*i+2] = -currentObject->VertexList[3*i+2];
 		}
-		WriteLogF(" VertexCount = %hu",currentObject->VertexCount);
+		if (isFullLog)
+			WriteLogF(" VertexCount = %hu",currentObject->VertexCount);
 		break;
 	case 0x4120: //FACE_ARRAY
 		// Читаем массив индексов
@@ -262,7 +268,8 @@ void ReadChunk(ifstream &ModelF, C3DS* scene)
 			ModelF.ignore(sizeof(unsigned short));
 		}
 		currentObject->IndexCount*=3;
-		WriteLogF(" IndexCount = %hu",currentObject->IndexCount);
+		if (isFullLog)
+			WriteLogF(" IndexCount = %hu",currentObject->IndexCount);
 		break;
 	case 0x4130: //FACE_MATERIALS_ARRAY
 		gp = ModelF.tellg();
@@ -277,7 +284,8 @@ void ReadChunk(ifstream &ModelF, C3DS* scene)
 		_name = new char[_len];
 		ModelF.read(_name, _len);
 		ModelF.read((char *)&(_tempShort),sizeof(GLushort));
-		WriteLogF("   Material '%s' Count = %hu", _name, _tempShort);
+		if (isFullLog)
+			WriteLogF("   Material '%s' Count = %hu", _name, _tempShort);
 		if (_tempShort > 0)
 		{
 			for (vector<CMaterial*>::iterator _it = scene->materials.begin(); _it != scene->materials.end(); _it++)
@@ -312,7 +320,8 @@ void ReadChunk(ifstream &ModelF, C3DS* scene)
 		ModelF.read((char *)&(currentObject->TexVertCount),2);
 		currentObject->TexVertList = new GLfloat[currentObject->TexVertCount*2];
 		ModelF.read((char *)currentObject->TexVertList,currentObject->TexVertCount*sizeof(GLfloat)*2);
-		WriteLogF(" TextureVertexCount = %hu",currentObject->TexVertCount);
+		if (isFullLog)
+			WriteLogF(" TextureVertexCount = %hu",currentObject->TexVertCount);
 		break;
 	case 0x4160: //MESH_MATRIX
 		// Считывание матрицы
@@ -365,7 +374,8 @@ void ReadChunk(ifstream &ModelF, C3DS* scene)
 	default:
 		// Пропускаем чанк
 		ModelF.ignore(chunk_len-6);
-		WriteLogF("   IGNORING");
+		if (isFullLog)
+			WriteLogF("   IGNORING");
 		break;
 	}
 }

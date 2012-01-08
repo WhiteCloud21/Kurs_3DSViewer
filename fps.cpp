@@ -20,8 +20,8 @@ void DrawFps()
 	frameCount++;
 	int _time=glutGet(GLUT_ELAPSED_TIME);
 	if (_time - oldTime > 1000) {
-		sprintf_s(_outBuf,"%8d %10u OC %6d getQTime",
-			(int)(frameCount*1000.0/(_time-oldTime)), occludedCount, getQTime);
+		sprintf_s(_outBuf,"%8d Occluded: %10u",
+			(int)(frameCount*1000.0/(_time-oldTime)), occludedCount);
 		oldTime = _time;
 		frameCount = 0;
 	}

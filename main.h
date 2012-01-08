@@ -29,8 +29,8 @@ extern bool CullFaceFlag;
 
 extern string ProgPath;
 extern string LogFile;
+extern bool isFullLog;
 extern unsigned int occludedCount;
-extern int getQTime;
 extern int frameSkipQuery;
 
 extern int windowWidth, windowHeight;

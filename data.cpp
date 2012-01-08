@@ -5,9 +5,9 @@ bool UseDestructors=true;
 
 string ProgPath;
 string LogFile;
+bool isFullLog = false;
 
 int windowWidth, windowHeight;
 bool UseOcclusionCulling;
 unsigned int occludedCount;
-int getQTime;
 int frameSkipQuery;
