@@ -80,7 +80,7 @@ void CCamera::Recalc(void)
 	// установить матрицу проекции с правильным аспектом
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(25.0,((float)windowWidth)/windowHeight,1.0,sqrt(position.x * position.x + position.y * position.y + position.z * position.z)*2);
+	gluPerspective(25.0,((float)windowWidth)/windowHeight,1.0,sqrt(position.x * position.x + position.y * position.y + position.z * position.z)*4);
 
 	scene.SortObjects();
 }

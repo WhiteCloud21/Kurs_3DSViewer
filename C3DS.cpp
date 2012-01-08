@@ -23,8 +23,8 @@ CCamera* C3DS::GetCurrentCamera()
 // Получение следующей камеры
 CCamera* C3DS::GetNextCamera()
 {
-	SortObjects();
 	cameraIndex = (cameraIndex + 1)%cameras.size();
+	cameras[cameraIndex]->Recalc();
 	return cameras[cameraIndex];
 }
 
@@ -186,7 +186,6 @@ void C3DS::SortObjects(void)
 // вывод на экран
 void C3DS::Render(void)
 {
-	static int _framesSkipped = 0;
 	GLuint sampleCount;
 
 	GLuint N = objects.size();
@@ -194,12 +193,11 @@ void C3DS::Render(void)
 	if (UseOcclusionCulling)
 	{
 
-		if (frameSkipQuery <= _framesSkipped++)
+		if (frameSkipQuery == 1)
 		{
+			frameSkipQuery++;
 			occludedCount = 0;
-			_framesSkipped = 0;
 			// Проверка результатов предыдущего кадра
-			int getQTime=glutGet(GLUT_ELAPSED_TIME);
 			for (uint i = 0; i < N; i++)
 			{
 				C3DSObject* _obj = objects[i];
@@ -214,15 +212,10 @@ void C3DS::Render(void)
 					_obj->wasDrawn = true;
 				}
 			}
-			getQTime = glutGet(GLUT_ELAPSED_TIME) - getQTime;
-			if (getQTime > frameSkipQuery)
-			{
-				//if (getQTime < 5)
-				frameSkipQuery = getQTime;
-			}
 		}
-		if (_framesSkipped == 0)
+		if (frameSkipQuery ==0)
 		{
+			frameSkipQuery++;
 			glDeleteQueriesARB(N, queries);
 			glGenQueriesARB(N, queries);
 			for (uint i = 0; i < N; i++)
